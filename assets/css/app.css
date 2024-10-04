@@ -3,3 +3,13 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+@layer base {
+    .font-outline {
+        -webkit-text-stroke: 1px black;
+    }
+
+    .font-outline-05 {
+        -webkit-text-stroke: 0.5px black;
+    }
+}

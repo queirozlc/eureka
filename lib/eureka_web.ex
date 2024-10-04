@@ -55,6 +55,9 @@ defmodule EurekaWeb do
         layout: {EurekaWeb.Layouts, :app}
 
       unquote(html_helpers())
+
+      def noreply(socket), do: {:noreply, socket}
+      def ok(socket), do: {:ok, socket}
     end
   end
 

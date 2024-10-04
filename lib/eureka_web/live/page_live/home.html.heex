@@ -1,1 +1,68 @@
-<h1>Hello World</h1>
+<div class="flex flex-col items-center justify-center gap-8">
+  <div class="text-center flex flex-col space-y-2 items-center">
+    <h1 class="text-4xl md:text-6xl font-bold font-mono text-contrast-yellow font-outline-05 select-none drop-shadow-text-lg md:font-outline">
+      Listen and Guess
+    </h1>
+    <div>
+      <strong class="text-2xl font-mono text-black font-semibold">Join a room</strong>
+      <p class="text-2xl select-none font-mono text-contrast-yellow font-semibold drop-shadow-text font-outline-05">
+        or
+      </p>
+      <strong class="text-2xl font-mono text-black font-semibold">Create a new one</strong>
+    </div>
+  </div>
+
+  <div class="md:mt-12 mt-8 w-full bg-brand border-4 border-black shadow-brutalism-xl md:h-96 h-72 flex flex-col items-center py-4 md:px-12 px-4">
+    <h1 class="text-white font-mono text-2xl md:text-4xl font-bold">Join a room</h1>
+    <div class="flex flex-col items-center justify-center self-center grow w-full gap-8">
+      <form class="flex w-full items-center relative" phx-submit="join_room">
+        <input
+          type="text"
+          phx-debounce="blur"
+          name="room_code"
+          placeholder="Type the room code"
+          class="rounded-l-lg bg-white outline-none border-2 border-black shadow-brutalism grow font-mono font-medium h-10 w-full focus:ring-offset-0 focus:ring-0 focus:border-current"
+          required
+        />
+        <.button
+          class="font-mono font-medium rounded-r-lg rounded-l-none !bg-brand-yellow border-2 border-black shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
+          type="submit"
+        >
+          Join
+        </.button>
+      </form>
+
+      <.button
+        class="font-mono font-medium rounded-full !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism"
+        phx-click="new_room"
+      >
+        Create a new room
+      </.button>
+    </div>
+
+    <.modal id="player_info">
+      <form class="flex flex-col gap-40 pt-10" method="POST" phx-submit="join">
+        <div class="flex flex-col gap-12">
+          <img src={~p"/images/logo.png"} width="100" class="self-center" />
+          <div class="flex flex-col mx-auto w-full max-w-[90%] gap-2">
+            <label for="player_nickname" class="font-mono font-medium text-lg">
+              What's your nickname
+            </label>
+            <input
+              type="text"
+              name="player_nickname"
+              id="player_nickname"
+              placeholder="Your display name in match"
+              class="rounded-full bg-white outline-none border-2 border-black shadow-brutalism font-mono font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
+              required
+            />
+          </div>
+        </div>
+
+        <button class="py-3 font-mono font-medium !bg-contrast-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm self-center text-lg transition-shadow duration-200 hover:shadow-brutalism gap-2">
+          Join <.icon name="hero-arrow-right-start-on-rectangle" class="size-5 font-semibold" />
+        </button>
+      </form>
+    </.modal>
+  </div>
+</div>
