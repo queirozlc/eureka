@@ -1,16 +1,41 @@
 defmodule Eureka.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Eureka.Players
 
   schema "users" do
     field :email, :string
+    field :nickname, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
+  end
+
+  @doc """
+  A changeset for guest users, which are users that have not registered.
+
+  Users can join and create rooms just setting their nickname without
+  necessity of registration.
+  """
+  def guest_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:nickname])
+    |> validate_required([:nickname])
+    |> create_guest_fields()
+  end
+
+  defp create_guest_fields(changeset) do
+    changeset
+    |> put_change(
+      :email,
+      "guest_#{DateTime.utc_now() |> DateTime.to_unix() |> Integer.to_string()}@eureka.com"
+    )
+    |> put_change(
+      :hashed_password,
+      Bcrypt.hash_pwd_salt("guest")
+    )
   end
 
   @doc """
