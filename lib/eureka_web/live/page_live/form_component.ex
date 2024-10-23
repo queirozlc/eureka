@@ -16,6 +16,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
         phx-trigger-action={@trigger_submit}
         phx-change="validate"
         phx-submit="save"
+        phx-mounted={JS.focus_first(to: "#nickname")}
         method="post"
       >
         <.error :if={@check_errors}>
@@ -34,6 +35,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
             <.input
               field={@form[:nickname]}
               type="text"
+              id="nickname"
               label="What's your nickname?"
               placeholder="Your display name in match"
               class="!rounded-full bg-white !outline-none !border-2 !border-black shadow-brutalism font-mono font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
