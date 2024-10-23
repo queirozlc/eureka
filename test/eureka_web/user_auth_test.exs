@@ -14,7 +14,7 @@ defmodule EurekaWeb.UserAuthTest do
       |> Map.replace!(:secret_key_base, EurekaWeb.Endpoint.config(:secret_key_base))
       |> init_test_session(%{})
 
-    %{user: user_fixture(), conn: conn}
+    %{user: user_fixture(), conn: conn, guest_user: guest_user_fixture()}
   end
 
   describe "log_in_user/3" do
@@ -26,9 +26,34 @@ defmodule EurekaWeb.UserAuthTest do
       assert Accounts.get_user_by_session_token(token)
     end
 
+    test "stores the guest user token in the session", %{conn: conn, guest_user: guest_user} do
+      conn = UserAuth.log_in_user(conn, guest_user, %{}, guest_user: true)
+      assert token = get_session(conn, :guest_user_token)
+      assert get_session(conn, :live_socket_id) == "users_sessions:#{Base.url_encode64(token)}"
+      assert redirected_to(conn) == ~p"/"
+      assert Accounts.get_user_by_session_token(token)
+    end
+
     test "clears everything previously stored in the session", %{conn: conn, user: user} do
       conn = conn |> put_session(:to_be_removed, "value") |> UserAuth.log_in_user(user)
       refute get_session(conn, :to_be_removed)
+    end
+
+    test "clears any guest session when logging in a registered user", %{
+      conn: conn,
+      user: user,
+      guest_user: guest_user
+    } do
+      guest_user_token = Accounts.generate_user_session_token(guest_user)
+
+      conn =
+        conn
+        |> put_session(:guest_user_token, guest_user_token)
+        |> UserAuth.log_in_user(user)
+
+      refute get_session(conn, :guest_user_token)
+      assert user_token = get_session(conn, :user_token)
+      assert Accounts.get_user_by_session_token(user_token)
     end
 
     test "redirects to the configured path", %{conn: conn, user: user} do
@@ -58,10 +83,25 @@ defmodule EurekaWeb.UserAuthTest do
         |> UserAuth.log_out_user()
 
       refute get_session(conn, :user_token)
+      refute get_session(conn, :guest_user_token)
       refute conn.cookies[@remember_me_cookie]
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
       assert redirected_to(conn) == ~p"/"
       refute Accounts.get_user_by_session_token(user_token)
+    end
+
+    test "erases guest_session", %{conn: conn, guest_user: guest_user} do
+      guest_user_token = Accounts.generate_user_session_token(guest_user)
+
+      conn =
+        conn
+        |> put_session(:guest_user_token, guest_user_token)
+        |> UserAuth.log_out_user()
+
+      refute get_session(conn, :guest_user_token)
+      refute get_session(conn, :user_token)
+      refute Accounts.get_user_by_session_token(guest_user_token)
+      assert redirected_to(conn) == ~p"/"
     end
 
     test "broadcasts to the given live_socket_id", %{conn: conn} do
@@ -88,6 +128,17 @@ defmodule EurekaWeb.UserAuthTest do
       user_token = Accounts.generate_user_session_token(user)
       conn = conn |> put_session(:user_token, user_token) |> UserAuth.fetch_current_user([])
       assert conn.assigns.current_user.id == user.id
+    end
+
+    test "authenticates a guest user from session", %{conn: conn, guest_user: guest_user} do
+      guest_user_token = Accounts.generate_user_session_token(guest_user)
+
+      conn =
+        conn
+        |> put_session(:guest_user_token, guest_user_token)
+        |> UserAuth.fetch_current_user([])
+
+      assert conn.assigns.current_user.id == guest_user.id
     end
 
     test "authenticates user from cookies", %{conn: conn, user: user} do
@@ -126,6 +177,47 @@ defmodule EurekaWeb.UserAuthTest do
         UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
 
       assert updated_socket.assigns.current_user.id == user.id
+    end
+
+    test "assigns current_user based on a valid guest_user_token", %{
+      conn: conn,
+      guest_user: guest_user
+    } do
+      guest_user_token = Accounts.generate_user_session_token(guest_user)
+      session = conn |> put_session(:guest_user_token, guest_user_token) |> get_session()
+
+      {:cont, updated_socket} =
+        UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
+
+      assert updated_socket.assigns.current_user.id == guest_user.id
+    end
+
+    test "assigns current_user when there's a valid guest and invalid user_token", %{
+      conn: conn,
+      guest_user: guest_user
+    } do
+      user_token = "invalid token"
+      guest_user_token = Accounts.generate_user_session_token(guest_user)
+
+      session =
+        conn
+        |> put_session(:user_token, user_token)
+        |> get_session()
+
+      {:cont, updated_socket} =
+        UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
+
+      assert updated_socket.assigns.current_user == nil
+
+      session =
+        conn
+        |> put_session(:guest_user_token, guest_user_token)
+        |> get_session()
+
+      {:cont, updated_socket} =
+        UserAuth.on_mount(:mount_current_user, %{}, session, %LiveView.Socket{})
+
+      assert updated_socket.assigns.current_user.id == guest_user.id
     end
 
     test "assigns nil to current_user assign if there isn't a valid user_token", %{conn: conn} do
@@ -231,7 +323,7 @@ defmodule EurekaWeb.UserAuthTest do
       conn = conn |> fetch_flash() |> UserAuth.require_authenticated_user([])
       assert conn.halted
 
-      assert redirected_to(conn) == ~p"/users/log_in"
+      assert redirected_to(conn) == ~p"/users/guest/log_in"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "You must log in to access this page."

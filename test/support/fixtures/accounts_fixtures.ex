@@ -23,6 +23,17 @@ defmodule Eureka.AccountsFixtures do
     user
   end
 
+  def guest_user_fixture(attrs \\ %{}) do
+    {:ok, user} =
+      attrs
+      |> Enum.into(%{
+        nickname: "guest"
+      })
+      |> Eureka.Accounts.register_guest()
+
+    user
+  end
+
   def extract_user_token(fun) do
     {:ok, captured_email} = fun.(&"[TOKEN]#{&1}[TOKEN]")
     [_, token | _] = String.split(captured_email.text_body, "[TOKEN]")

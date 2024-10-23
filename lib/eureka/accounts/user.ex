@@ -23,6 +23,7 @@ defmodule Eureka.Accounts.User do
     user
     |> cast(attrs, [:nickname])
     |> validate_required([:nickname])
+    |> validate_length(:nickname, max: 20, min: 2)
     |> create_guest_fields()
   end
 
@@ -33,9 +34,10 @@ defmodule Eureka.Accounts.User do
       "guest_#{DateTime.utc_now() |> DateTime.to_unix() |> Integer.to_string()}@eureka.com"
     )
     |> put_change(
-      :hashed_password,
-      Bcrypt.hash_pwd_salt("guest")
+      :password,
+      "guest_#{DateTime.utc_now() |> DateTime.to_unix() |> Integer.to_string()}"
     )
+    |> maybe_hash_password([])
   end
 
   @doc """

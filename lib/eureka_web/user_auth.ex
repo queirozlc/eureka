@@ -25,14 +25,16 @@ defmodule EurekaWeb.UserAuth do
   disconnected on log out. The line can be safely removed
   if you are not using LiveView.
   """
-  def log_in_user(conn, user, params \\ %{}) do
+  def log_in_user(conn, user, params \\ %{}, opts \\ []) do
+    guest_user = Keyword.get(opts, :guest_user, false)
     token = Accounts.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
 
     conn
     |> renew_session()
-    |> put_token_in_session(token)
+    |> put_token_in_session(token, guest_user: guest_user)
     |> maybe_write_remember_me_cookie(token, params)
+    |> maybe_logout_guest_user()
     |> redirect(to: user_return_to || signed_in_path(conn))
   end
 
@@ -42,6 +44,21 @@ defmodule EurekaWeb.UserAuth do
 
   defp maybe_write_remember_me_cookie(conn, _token, _params) do
     conn
+  end
+
+  # If the user is logged in as a guest, we should log them out
+  # when they log in as a registered user.
+  defp maybe_logout_guest_user(conn) do
+    user_token = get_session(conn, :user_token)
+    guest_user_token = get_session(conn, :guest_user_token)
+
+    if user_token && guest_user_token do
+      Accounts.delete_user_session_token(guest_user_token)
+      delete_csrf_token()
+      clear_session(conn)
+    else
+      conn
+    end
   end
 
   # This function renews the session ID and erases the whole
@@ -74,7 +91,15 @@ defmodule EurekaWeb.UserAuth do
   """
   def log_out_user(conn) do
     user_token = get_session(conn, :user_token)
-    user_token && Accounts.delete_user_session_token(user_token)
+    guest_user_token = get_session(conn, :guest_user_token)
+
+    if user_token do
+      Accounts.delete_user_session_token(user_token)
+    end
+
+    if guest_user_token do
+      Accounts.delete_user_session_token(guest_user_token)
+    end
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       EurekaWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
@@ -105,8 +130,16 @@ defmodule EurekaWeb.UserAuth do
       if token = conn.cookies[@remember_me_cookie] do
         {token, put_token_in_session(conn, token)}
       else
-        {nil, conn}
+        try_guest_user_token(conn)
       end
+    end
+  end
+
+  defp try_guest_user_token(conn) do
+    if token = get_session(conn, :guest_user_token) do
+      {token, conn}
+    else
+      {nil, conn}
     end
   end
 
@@ -178,6 +211,10 @@ defmodule EurekaWeb.UserAuth do
     Phoenix.Component.assign_new(socket, :current_user, fn ->
       if user_token = session["user_token"] do
         Accounts.get_user_by_session_token(user_token)
+      else
+        if guest_user_token = session["guest_user_token"] do
+          Accounts.get_user_by_session_token(guest_user_token)
+        end
       end
     end)
   end
@@ -208,14 +245,17 @@ defmodule EurekaWeb.UserAuth do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: ~p"/users/log_in")
+      |> redirect(to: ~p"/users/guest/log_in")
       |> halt()
     end
   end
 
-  defp put_token_in_session(conn, token) do
+  defp put_token_in_session(conn, token, opts \\ []) do
+    guest_user = opts[:guest_user]
+    session_name = (guest_user && :guest_user_token) || :user_token
+
     conn
-    |> put_session(:user_token, token)
+    |> put_session(session_name, token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
   end
 

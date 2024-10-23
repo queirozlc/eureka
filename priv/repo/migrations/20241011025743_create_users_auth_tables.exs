@@ -6,7 +6,7 @@ defmodule Eureka.Repo.Migrations.CreateUsersAuthTables do
 
     create table(:users) do
       add :email, :citext, null: false
-      add :nickname, :string, null: false
+      add :nickname, :string
       add :hashed_password, :string, null: false
       add :confirmed_at, :utc_datetime
 

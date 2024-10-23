@@ -215,6 +215,16 @@ defmodule Eureka.Accounts do
     end
   end
 
+  def register_guest(attrs) do
+    %User{}
+    |> User.guest_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def change_guest_user(user, attrs \\ %{}) do
+    User.guest_changeset(user, attrs)
+  end
+
   ## Session
 
   @doc """

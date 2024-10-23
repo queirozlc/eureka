@@ -32,37 +32,23 @@
         </.button>
       </form>
 
-      <.button
+      <.link
         class="font-mono font-medium rounded-full !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism"
-        phx-click="new_room"
+        navigate={~p"/protected_page"}
       >
         Create a new room
-      </.button>
+      </.link>
     </div>
-
-    <.modal id="player_info">
-      <form class="flex flex-col gap-40 pt-10" method="POST" phx-submit="join">
-        <div class="flex flex-col gap-12">
-          <img src={~p"/images/logo.png"} width="100" class="self-center" />
-          <div class="flex flex-col mx-auto w-full max-w-[90%] gap-2">
-            <label for="player_nickname" class="font-mono font-medium text-lg">
-              What's your nickname
-            </label>
-            <input
-              type="text"
-              name="player_nickname"
-              id="player_nickname"
-              placeholder="Your display name in match"
-              class="rounded-full bg-white outline-none border-2 border-black shadow-brutalism font-mono font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
-              required
-            />
-          </div>
-        </div>
-
-        <button class="py-3 font-mono font-medium !bg-contrast-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm self-center text-lg transition-shadow duration-200 hover:shadow-brutalism gap-2">
-          Join <.icon name="hero-arrow-right-start-on-rectangle" class="size-5 font-semibold" />
-        </button>
-      </form>
-    </.modal>
   </div>
 </div>
+
+<.join_room_modal avatar={@avatar} action={@live_action} />
+
+<.modal :if={@live_action == :guest_log_in} show on_cancel={JS.patch(~p"/")} id="guest_log_in">
+  <.live_component
+    module={EurekaWeb.PageLive.FormComponent}
+    id={@live_action}
+    avatar={@avatar}
+    submit_label="Enter as guest"
+  />
+</.modal>

@@ -310,6 +310,69 @@ defmodule Eureka.AccountsTest do
     end
   end
 
+  describe "register_guest/1" do
+    test "requires nickname" do
+      assert {:error, %Ecto.Changeset{errors: errors} = changeset} = Accounts.register_guest(%{})
+      assert errors == [nickname: {"can't be blank", [validation: :required]}]
+      refute changeset.valid?
+    end
+
+    test "validates nickname minimum size" do
+      assert {:error, %Ecto.Changeset{errors: errors} = changeset} =
+               Accounts.register_guest(%{nickname: "a"})
+
+      assert errors == [
+               nickname:
+                 {"should be at least %{count} character(s)",
+                  [count: 2, validation: :length, kind: :min, type: :string]}
+             ]
+
+      refute changeset.valid?
+    end
+
+    test "validates nickname maximum size" do
+      too_long = String.duplicate("guest", 5)
+
+      assert {:error, %Ecto.Changeset{errors: errors} = changeset} =
+               Accounts.register_guest(%{nickname: too_long})
+
+      assert errors == [
+               nickname:
+                 {"should be at most %{count} character(s)",
+                  [count: 20, validation: :length, kind: :max, type: :string]}
+             ]
+
+      refute changeset.valid?
+    end
+
+    test "registers a guest user" do
+      assert {:ok, user} = Accounts.register_guest(%{nickname: "Guest"})
+      assert user.nickname == "Guest"
+      assert String.contains?(user.email, "guest")
+      assert String.contains?(user.email, "@eureka.com")
+      assert is_binary(user.hashed_password)
+      assert is_nil(user.password)
+      assert is_nil(user.confirmed_at)
+    end
+  end
+
+  describe "change_guest_user/2" do
+    test "returns a user changeset" do
+      assert %Ecto.Changeset{} = changeset = Accounts.change_guest_user(%User{})
+      assert changeset.required == [:nickname]
+    end
+
+    test "allows fields to be set" do
+      changeset =
+        Accounts.change_guest_user(%User{}, %{
+          "nickname" => "New Nickname"
+        })
+
+      assert changeset.valid?
+      assert get_change(changeset, :nickname) == "New Nickname"
+    end
+  end
+
   describe "generate_user_session_token/1" do
     setup do
       %{user: user_fixture()}

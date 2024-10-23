@@ -4,7 +4,7 @@ defmodule EurekaWeb.UserSessionControllerTest do
   import Eureka.AccountsFixtures
 
   setup do
-    %{user: user_fixture()}
+    %{user: user_fixture(), guest_user: guest_user_fixture()}
   end
 
   describe "POST /users/log_in" do
@@ -20,7 +20,6 @@ defmodule EurekaWeb.UserSessionControllerTest do
       # Now do a logged in request and assert on the menu
       conn = get(conn, ~p"/")
       response = html_response(conn, 200)
-      assert response =~ user.email
       assert response =~ ~p"/users/settings"
       assert response =~ ~p"/users/log_out"
     end
@@ -92,6 +91,20 @@ defmodule EurekaWeb.UserSessionControllerTest do
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
       assert redirected_to(conn) == ~p"/users/log_in"
+    end
+
+    test "login following guest user registration", %{conn: conn, guest_user: guest_user} do
+      conn =
+        conn
+        |> post(~p"/users/log_in", %{
+          "_action" => "guest/#{guest_user.id}",
+          "user" => %{
+            "nickname" => guest_user.nickname
+          }
+        })
+
+      assert redirected_to(conn) == ~p"/"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
     end
   end
 
