@@ -31,7 +31,6 @@ defmodule EurekaWeb.PageLive.Home do
     # message that come here unhandled are:
     # 1. {:DOWN, _ref, :process, _pid, :normal}
     # 2. {_ref, {:ok, response = %Req.Response{}}}
-    # TODO: other Task.async responses
 
     {:noreply, socket}
   end

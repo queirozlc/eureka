@@ -209,13 +209,8 @@ defmodule EurekaWeb.UserAuth do
 
   defp mount_current_user(socket, session) do
     Phoenix.Component.assign_new(socket, :current_user, fn ->
-      if user_token = session["user_token"] do
-        Accounts.get_user_by_session_token(user_token)
-      else
-        if guest_user_token = session["guest_user_token"] do
-          Accounts.get_user_by_session_token(guest_user_token)
-        end
-      end
+      user_token = session["user_token"] || session["guest_user_token"]
+      if user_token, do: Accounts.get_user_by_session_token(user_token)
     end)
   end
 
