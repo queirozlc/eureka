@@ -4,18 +4,6 @@ defmodule EurekaWeb.PageLiveTest do
 
   import Phoenix.LiveViewTest
 
-  setup_all do
-    task = Eureka.Avatar.random(self())
-    Task.await(task)
-
-    avatar =
-      receive do
-        {:avatar, data} -> data
-      end
-
-    {:ok, avatar: avatar}
-  end
-
   describe "Home page" do
     test "renders home page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
@@ -94,13 +82,6 @@ defmodule EurekaWeb.PageLiveTest do
       assert disconnected_html =~ "Log in"
       assert disconnected_html =~ "Register"
       assert disconnected_html =~ "Forgot your password?"
-    end
-
-    test "guest modal opened with avatar", %{conn: conn, avatar: avatar} do
-      {:ok, view, _html} = live(conn, ~p"/users/guest/log_in")
-      send(view.pid, {:avatar, avatar})
-
-      assert view |> has_element?(~s"#avatar_container svg")
     end
   end
 

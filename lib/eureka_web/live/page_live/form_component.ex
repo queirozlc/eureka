@@ -24,9 +24,9 @@ defmodule EurekaWeb.PageLive.FormComponent do
 
         <div class="flex flex-col gap-12">
           <%!-- renders the @avatar svg if exists --%>
-          <%= if @avatar do %>
+          <%= if @avatar.ok? && @avatar.result do %>
             <div class="self-center size-32 sm:size-40 shadow-brutalism" id="avatar_container">
-              <%= @avatar |> raw() %>
+              <%= @avatar.result |> raw() %>
             </div>
           <% end %>
 
