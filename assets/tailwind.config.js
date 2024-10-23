@@ -27,8 +27,9 @@ module.exports = {
         text: "1px 1px rgb(0, 0, 0)",
       },
       boxShadow: {
-        "brutalism-xl": "12px 12px 0 #000",
+        "brutalism-sm": "2px 2px 0 #000",
         brutalism: "6px 4px 0 #000",
+        "brutalism-xl": "12px 12px 0 #000",
       },
     },
   },
