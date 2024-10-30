@@ -42,6 +42,6 @@ defmodule Eureka.Game.Room do
   end
 
   def generate_code do
-    SecureRandom.hex(2) |> String.upcase()
+    :crypto.strong_rand_bytes(2) |> Base.encode16()
   end
 end

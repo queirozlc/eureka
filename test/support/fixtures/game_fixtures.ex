@@ -7,7 +7,7 @@ defmodule Eureka.GameFixtures do
   @doc """
   Generate a unique room code.
   """
-  def unique_room_code, do: SecureRandom.hex(2) |> String.upcase()
+  def unique_room_code, do: Eureka.Game.Room.generate_code()
 
   @doc """
   Generate a room.
