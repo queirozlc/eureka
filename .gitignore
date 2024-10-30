@@ -35,3 +35,5 @@ eureka-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# MacOS Files
+.DS_Store
