@@ -60,6 +60,18 @@ defmodule Eureka.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Gets a list of users by their IDs.
+
+  ## Examples
+
+      iex> get_users_map([1, 2, 3])
+      [%User{}, %User{}, %User{}]
+  """
+  def get_users_map(user_ids) when is_list(user_ids) do
+    Repo.all(from u in User, where: u.id in ^user_ids, select: {u.id, u})
+  end
+
   ## User registration
 
   @doc """

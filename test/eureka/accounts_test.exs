@@ -48,6 +48,23 @@ defmodule Eureka.AccountsTest do
     end
   end
 
+  describe "get_users_map/1" do
+    setup do
+      users = Enum.map(1..3, fn _ -> user_fixture() end)
+      {:ok, users: users}
+    end
+
+    test "returns a map of users by their IDs", %{users: users} do
+      # convert to a tuple {user_id, user}
+      users_map = Enum.map(users, &{&1.id, &1})
+      assert users_map == Accounts.get_users_map(Enum.map(users, & &1.id))
+    end
+
+    test "returns an empty list if no users are found" do
+      assert [] == Accounts.get_users_map([])
+    end
+  end
+
   describe "register_user/1" do
     test "requires email and password to be set" do
       {:error, changeset} = Accounts.register_user(%{})

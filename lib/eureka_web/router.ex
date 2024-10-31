@@ -64,6 +64,7 @@ defmodule EurekaWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
       live "/rooms/:code/settings", RoomLive.Show, :edit
+      live "/rooms/:code", RoomLive.Show, :show
     end
   end
 

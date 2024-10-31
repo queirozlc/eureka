@@ -139,4 +139,22 @@ defmodule EurekaWeb.PageLiveTest do
       assert_redirected(view, ~p"/users/log_out")
     end
   end
+
+  describe "creating and joining new room" do
+    setup %{conn: conn} do
+      conn = log_in_user(conn, user_fixture())
+      {:ok, conn: conn}
+    end
+
+    test "creates a room and redirects to room settings", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      assert {:error, {:live_redirect, %{to: to}}} =
+               view
+               |> element("#create_room")
+               |> render_click()
+
+      assert to =~ ~r"/rooms/\w+/settings"
+    end
+  end
 end
