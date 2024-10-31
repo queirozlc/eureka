@@ -24,6 +24,23 @@ defmodule EurekaWeb.UserSessionControllerTest do
       assert response =~ ~p"/users/log_out"
     end
 
+    test "logs the guest user in", %{conn: conn, guest_user: guest_user} do
+      conn =
+        post(conn, ~p"/users/log_in", %{
+          "_action" => "guest_user/#{guest_user.id}"
+        })
+
+      assert get_session(conn, :guest_user_token)
+      refute get_session(conn, :user_token)
+      assert redirected_to(conn) == ~p"/"
+
+      # Now do a logged in request and assert on the menu
+      conn = get(conn, ~p"/")
+      response = html_response(conn, 200)
+      assert response =~ ~p"/users/settings"
+      assert response =~ ~p"/users/log_out"
+    end
+
     test "logs the user in with remember me", %{conn: conn, user: user} do
       conn =
         post(conn, ~p"/users/log_in", %{
@@ -92,26 +109,20 @@ defmodule EurekaWeb.UserSessionControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
       assert redirected_to(conn) == ~p"/users/log_in"
     end
-
-    test "login following guest user registration", %{conn: conn, guest_user: guest_user} do
-      conn =
-        conn
-        |> post(~p"/users/log_in", %{
-          "_action" => "guest/#{guest_user.id}",
-          "user" => %{
-            "nickname" => guest_user.nickname
-          }
-        })
-
-      assert redirected_to(conn) == ~p"/"
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
-    end
   end
 
   describe "DELETE /users/log_out" do
     test "logs the user out", %{conn: conn, user: user} do
       conn = conn |> log_in_user(user) |> delete(~p"/users/log_out")
       assert redirected_to(conn) == ~p"/"
+      refute get_session(conn, :user_token)
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
+    end
+
+    test "logs a guest user out", %{conn: conn, guest_user: guest_user} do
+      conn = conn |> log_in_user(guest_user) |> delete(~p"/users/log_out")
+      assert redirected_to(conn) == ~p"/"
+      refute get_session(conn, :guest_user_token)
       refute get_session(conn, :user_token)
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
     end

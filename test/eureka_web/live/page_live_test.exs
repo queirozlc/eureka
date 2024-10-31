@@ -1,6 +1,5 @@
 defmodule EurekaWeb.PageLiveTest do
   use EurekaWeb.ConnCase, async: true
-  import Eureka.AccountsFixtures
 
   import Phoenix.LiveViewTest
 
@@ -80,6 +79,10 @@ defmodule EurekaWeb.PageLiveTest do
 
       nickname = "caslu"
 
+      assert view
+             |> form("#guest-form", user: %{"nickname" => ""})
+             |> render_change() =~ "can&#39;t be blank"
+
       form = form(view, "#guest-form", user: %{"nickname" => nickname})
       render_submit(form)
       conn = follow_trigger_action(form, conn)
@@ -90,6 +93,17 @@ defmodule EurekaWeb.PageLiveTest do
       response = html_response(conn, 200)
       assert response =~ "Settings"
       assert response =~ "Log out"
+    end
+
+    test "returns changeset error when fails registering guest", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/users/guest/log_in")
+
+      assert view
+             |> form("#guest-form", user: %{"nickname" => ""})
+             |> render_submit() =~ "can&#39;t be blank"
+
+      assert has_element?(view, "p", "Oops, something went wrong! Please check the errors below.
+")
     end
 
     test "guest modal redirects to sign in page", %{conn: conn} do
@@ -109,11 +123,7 @@ defmodule EurekaWeb.PageLiveTest do
   end
 
   describe "user settings and logout" do
-    setup %{conn: conn} do
-      current_user = user_fixture()
-      conn = log_in_user(conn, current_user)
-      {:ok, conn: conn, current_user: current_user}
-    end
+    setup :register_and_log_in_user
 
     test "renders a user settings page", %{conn: conn} do
       {:ok, view, _} = live(conn, ~p"/")
@@ -141,10 +151,7 @@ defmodule EurekaWeb.PageLiveTest do
   end
 
   describe "creating and joining new room" do
-    setup %{conn: conn} do
-      conn = log_in_user(conn, user_fixture())
-      {:ok, conn: conn}
-    end
+    setup :register_and_log_in_user
 
     test "creates a room and redirects to room settings", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")

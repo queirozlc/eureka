@@ -34,7 +34,6 @@ defmodule EurekaWeb.UserAuth do
     |> renew_session()
     |> put_token_in_session(token, guest_user: guest_user)
     |> maybe_write_remember_me_cookie(token, params)
-    |> maybe_logout_guest_user()
     |> redirect(to: user_return_to || signed_in_path(conn))
   end
 
@@ -44,21 +43,6 @@ defmodule EurekaWeb.UserAuth do
 
   defp maybe_write_remember_me_cookie(conn, _token, _params) do
     conn
-  end
-
-  # If the user is logged in as a guest, we should log them out
-  # when they log in as a registered user.
-  defp maybe_logout_guest_user(conn) do
-    user_token = get_session(conn, :user_token)
-    guest_user_token = get_session(conn, :guest_user_token)
-
-    if user_token && guest_user_token do
-      Accounts.delete_user_session_token(guest_user_token)
-      delete_csrf_token()
-      clear_session(conn)
-    else
-      conn
-    end
   end
 
   # This function renews the session ID and erases the whole

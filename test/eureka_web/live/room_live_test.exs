@@ -5,12 +5,7 @@ defmodule EurekaWeb.RoomLiveTest do
   import Eureka.AccountsFixtures
   import Eureka.GameFixtures
 
-  setup %{conn: conn} do
-    user = user_fixture()
-    conn = log_in_user(conn, user)
-
-    {:ok, conn: conn, user: user}
-  end
+  setup :register_and_log_in_user
 
   @valid_attrs %{"capacity" => 5, "score" => 10}
 

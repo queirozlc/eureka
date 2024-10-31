@@ -39,23 +39,6 @@ defmodule EurekaWeb.UserAuthTest do
       refute get_session(conn, :to_be_removed)
     end
 
-    test "clears any guest session when logging in a registered user", %{
-      conn: conn,
-      user: user,
-      guest_user: guest_user
-    } do
-      guest_user_token = Accounts.generate_user_session_token(guest_user)
-
-      conn =
-        conn
-        |> put_session(:guest_user_token, guest_user_token)
-        |> UserAuth.log_in_user(user)
-
-      refute get_session(conn, :guest_user_token)
-      assert user_token = get_session(conn, :user_token)
-      assert Accounts.get_user_by_session_token(user_token)
-    end
-
     test "redirects to the configured path", %{conn: conn, user: user} do
       conn = conn |> put_session(:user_return_to, "/hello") |> UserAuth.log_in_user(user)
       assert redirected_to(conn) == "/hello"

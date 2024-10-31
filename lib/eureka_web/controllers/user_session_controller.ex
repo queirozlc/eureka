@@ -14,8 +14,7 @@ defmodule EurekaWeb.UserSessionController do
     |> create(params, "Password updated successfully!")
   end
 
-  def create(conn, %{"_action" => action}) do
-    user_id = action |> String.split("/") |> List.last() |> String.to_integer()
+  def create(conn, %{"_action" => "guest_user/" <> user_id}) do
     create_guest(conn, %{"user_id" => user_id}, "Account created successfully!")
   end
 
@@ -40,14 +39,11 @@ defmodule EurekaWeb.UserSessionController do
   end
 
   defp create_guest(conn, %{"user_id" => id}, info) do
-    if user = Accounts.get_user!(id) do
-      conn
-      |> put_flash(:info, info)
-      |> UserAuth.log_in_user(user, %{}, guest_user: true)
-    else
-      conn
-      |> redirect(to: ~p"/users/log_in")
-    end
+    user = Accounts.get_user!(id)
+
+    conn
+    |> put_flash(:info, info)
+    |> UserAuth.log_in_user(user, %{}, guest_user: true)
   end
 
   def delete(conn, _params) do

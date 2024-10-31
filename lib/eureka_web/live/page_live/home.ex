@@ -34,14 +34,10 @@ defmodule EurekaWeb.PageLive.Home do
   end
 
   defp apply_action(socket, user) do
-    case Game.create_room(%{user_id: user.id}) do
-      {:ok, room} ->
-        socket
-        |> assign(room: room)
-        |> push_navigate(to: ~p"/rooms/#{room.code}/settings")
+    {:ok, room} = Game.create_room(%{user_id: user.id})
 
-      {:error, changeset} ->
-        socket |> put_flash(:error, "Error creating room") |> assign(changeset: changeset)
-    end
+    socket
+    |> assign(room: room)
+    |> push_navigate(to: ~p"/rooms/#{room.code}/settings")
   end
 end
