@@ -6,7 +6,7 @@ defmodule Eureka.Accounts do
   import Ecto.Query, warn: false
   alias Eureka.Repo
 
-  alias Eureka.Accounts.{User, UserToken, UserNotifier}
+  alias Eureka.Accounts.{User, UserNotifier, UserToken}
 
   ## Database getters
 

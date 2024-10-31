@@ -42,16 +42,26 @@ defmodule EurekaWeb.PageLiveTest do
 
   describe "user guest authentication modal" do
     test "renders sign in modal", %{conn: conn} do
-      # 1. Connect to live view
       {:ok, view, _html} = live(conn, ~p"/")
 
-      # 2. Find button and 3. Simulate click
       assert view
              |> element("button", "Create a new room")
              |> render_click()
 
-      # 4. Assert the path was patched to guest login
       assert_patch(view, ~p"/users/guest/log_in")
+    end
+
+    test "ensures avatar rendered in guest modal", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      assert view
+             |> element("#create_room")
+             |> render_click()
+
+      html = render_async(view, 2000)
+
+      assert html =~ "Enter as guest"
+      assert has_element?(view, "#avatar_container svg")
     end
 
     test "renders sign in modal when tries to access an authenticated route", %{conn: conn} do

@@ -26,7 +26,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
         <div class="flex flex-col gap-12">
           <%!-- renders the @avatar svg if exists --%>
           <%= if @avatar.ok? && @avatar.result do %>
-            <div class="self-center size-32 sm:size-40 shadow-brutalism" id="avatar_container">
+            <div class="self-center size-32 sm:size-40" id="avatar_container">
               <%= @avatar.result |> raw() %>
             </div>
           <% end %>
@@ -80,7 +80,9 @@ defmodule EurekaWeb.PageLive.FormComponent do
 
   @impl true
   def handle_event("save", %{"user" => user_params}, socket) do
-    case Accounts.register_guest(user_params) do
+    avatar = socket.assigns.avatar.result
+
+    case Accounts.register_guest(Map.put(user_params, "avatar", avatar)) do
       {:ok, user} ->
         changeset = Accounts.change_guest_user(user)
 

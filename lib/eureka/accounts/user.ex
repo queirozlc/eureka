@@ -8,6 +8,7 @@ defmodule Eureka.Accounts.User do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
+    field :avatar, :string
     field :confirmed_at, :utc_datetime
 
     timestamps(type: :utc_datetime)
@@ -21,7 +22,7 @@ defmodule Eureka.Accounts.User do
   """
   def guest_changeset(user, attrs) do
     user
-    |> cast(attrs, [:nickname])
+    |> cast(attrs, [:nickname, :avatar])
     |> validate_required([:nickname])
     |> validate_length(:nickname, max: 20, min: 2)
     |> create_guest_fields()
