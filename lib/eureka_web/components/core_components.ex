@@ -204,7 +204,7 @@ defmodule EurekaWeb.CoreComponents do
 
   def simple_form(assigns) do
     ~H"""
-    <.form :let={f} for={@for} as={@as} {@rest}>
+    <.form :let={f} for={@for} as={@as} {@rest} class="w-full">
       <div class={[
         "mt-10 space-y-8",
         @class
@@ -378,7 +378,7 @@ defmodule EurekaWeb.CoreComponents do
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div phx-feedback-for={@name} class="w-full">
       <.label for={@id}><%= @label %></.label>
       <input
         type={@type}

@@ -15,10 +15,7 @@ defmodule EurekaWeb.RoomLive.Show do
         <p class="font-mono font-medium text-xl grow select-none" id="room_code">
           <%= @room.code %>
         </p>
-        <button
-          class="flex items-center p-1"
-          phx-click={JS.dispatch("clipboard:copy", to: "#room_code")}
-        >
+        <button class="flex items-center p-1" phx-click={add_to_clipboard()}>
           <.icon name="hero-clipboard" />
         </button>
       </div>
@@ -180,5 +177,9 @@ defmodule EurekaWeb.RoomLive.Show do
 
   defp sorted_presences(presences, admin_id) do
     Enum.sort_by(presences, fn {_, user} -> {user.id == admin_id, user.id} end)
+  end
+
+  defp add_to_clipboard do
+    JS.dispatch("clipboard:copy", to: "#room_code")
   end
 end

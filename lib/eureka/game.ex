@@ -39,18 +39,18 @@ defmodule Eureka.Game do
 
   @doc """
   Similar to `get_room!/1`, but fetches a room by its code.
-  Also raises `Ecto.NoResultsError` if the Room does not exist.
+  But returns `nil` instead of raising an error.
 
   ## Examples
     iex> get_room_by_code!("123")
     %Room{}
 
     iex> get_room_by_code!("456")
-    ** (Ecto.NoResultsError)
+    nil
   """
   def get_room_by_code(code) do
     from(r in Room, where: r.code == ^code)
-    |> Repo.one!()
+    |> Repo.one()
   end
 
   @doc """
@@ -109,6 +109,21 @@ defmodule Eureka.Game do
   end
 
   @doc """
+  Retunrns true or false if the room can be joined or not.
+  It checks if the number of players in the room is less than the room capacity.
+    
+  ## Examples
+      iex> can_join_room?(%Room{capacity: 4}, 3)
+      true
+      iex> can_join_room?(%Room{capacity: 4}, 4)
+      false
+  """
+  @spec can_join_room?(room :: struct(), num_players :: integer()) :: boolean()
+  def can_join_room?(%Room{capacity: capacity}, num_players) do
+    num_players + 1 <= capacity
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking room changes.
 
   ## Examples
@@ -118,7 +133,7 @@ defmodule Eureka.Game do
 
   """
   def change_room(%Room{} = room, attrs \\ %{}) do
-    Room.settings_changeset(room, attrs)
+    Room.changeset(room, attrs)
   end
 
   @doc """

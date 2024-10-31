@@ -15,22 +15,33 @@
   <div class="md:mt-12 mt-8 w-full bg-brand border-4 border-black shadow-brutalism-xl md:h-96 h-72 flex flex-col items-center py-4 md:px-12 px-4">
     <h1 class="text-white font-mono text-2xl md:text-4xl font-bold">Join a room</h1>
     <div class="flex flex-col items-center justify-center self-center grow w-full gap-8">
-      <form class="flex w-full items-center relative" phx-submit="join_room">
-        <input
+      <.simple_form
+        class="!mt-0 !space-y-0 flex"
+        for={@form}
+        phx-submit="join_room"
+        phx-change="validate"
+        phx-update="ignore"
+      >
+        <.error :if={@check_errors}>
+          Oops, something went wrong! Please check the errors below.
+        </.error>
+
+        <.input
+          field={@form[:code]}
           type="text"
-          phx-debounce="blur"
-          name="room_code"
           placeholder="Type the room code"
-          class="rounded-l-lg bg-white outline-none border-2 border-black shadow-brutalism grow font-mono font-medium h-10 w-full focus:ring-offset-0 focus:ring-0 focus:border-current"
+          class="!rounded-l-lg !rounded-r-none !mt-0 bg-white outline-none border-2 !border-black shadow-brutalism font-mono font-medium !text-lg h-10 !w-full !focus:ring-offset-0 !focus:ring-0 focus:border-current"
           required
         />
-        <.button
-          class="font-mono font-medium rounded-r-lg rounded-l-none !bg-brand-yellow border-2 border-black shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
-          type="submit"
-        >
-          Join
-        </.button>
-      </form>
+        <:actions>
+          <.button
+            class="font-mono font-medium rounded-r-lg rounded-l-none !bg-brand-yellow border-2 border-black shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
+            phx-disable-with="Joining..."
+          >
+            Join
+          </.button>
+        </:actions>
+      </.simple_form>
 
       <button
         class="font-mono font-medium rounded-full !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism"
@@ -43,8 +54,6 @@
     </div>
   </div>
 </div>
-
-<.join_room_modal avatar={@avatar} action={@live_action} />
 
 <.modal :if={@live_action == :guest_log_in} show on_cancel={JS.patch(~p"/")} id="guest_log_in">
   <.live_component

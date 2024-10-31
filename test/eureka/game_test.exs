@@ -34,8 +34,8 @@ defmodule Eureka.GameTest do
       assert Game.get_room_by_code(room.code) == room
     end
 
-    test "get_room_by_code/1 raises Ecto.NoResultsError when no room found" do
-      assert_raise Ecto.NoResultsError, fn -> Game.get_room_by_code("0") end
+    test "get_room_by_code/1 returns nil when no room found" do
+      assert nil == Game.get_room_by_code("invalid")
     end
 
     test "create_room/1 with valid data creates a room", %{user: user} do
@@ -75,6 +75,18 @@ defmodule Eureka.GameTest do
       room = room_fixture()
       assert {:ok, %Room{}} = Game.delete_room(room)
       assert_raise Ecto.NoResultsError, fn -> Game.get_room!(room.id) end
+    end
+
+    test "can_join_room/2 when room is available" do
+      room = room_fixture()
+      num_players = 1
+      assert Game.can_join_room?(room, num_players)
+    end
+
+    test "can_join_room/2 when room is full of capacity" do
+      room = room_fixture()
+      num_players = room.capacity
+      refute Game.can_join_room?(room, num_players)
     end
 
     test "change_room/1 returns a room changeset" do

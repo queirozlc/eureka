@@ -59,6 +59,8 @@ defmodule EurekaWeb.Router do
   scope "/", EurekaWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    post "/rooms", RoomController, :join
+
     live_session :require_authenticated_user,
       on_mount: [{EurekaWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
