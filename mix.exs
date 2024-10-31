@@ -70,6 +70,7 @@ defmodule Eureka.MixProject do
       {:bandit, "~> 1.2"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
+      {:lexical_credo, "~> 0.5.0", only: [:dev, :test]},
       {:excoveralls, "~> 0.18", only: :test}
     ]
   end
