@@ -3,7 +3,7 @@ defmodule EurekaWeb.RoomLiveTest do
 
   import Phoenix.LiveViewTest
   import Eureka.AccountsFixtures
-  import Eureka.GameFixtures
+  import Eureka.PlayersFixtures
 
   setup :register_and_log_in_user
 

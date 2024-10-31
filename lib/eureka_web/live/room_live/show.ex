@@ -1,5 +1,5 @@
 defmodule EurekaWeb.RoomLive.Show do
-  alias Eureka.Game
+  alias Eureka.Players
   alias EurekaWeb.Presence
   use EurekaWeb, :live_view
 
@@ -111,7 +111,7 @@ defmodule EurekaWeb.RoomLive.Show do
 
   @impl true
   def mount(%{"code" => code}, _session, socket) do
-    room = Game.get_room_by_code(code)
+    room = Players.get_room_by_code(code)
 
     if connected?(socket) do
       Presence.subscribe(room)
@@ -123,7 +123,7 @@ defmodule EurekaWeb.RoomLive.Show do
       |> assign(room: room)
       |> assign_presences()
       |> assign_new(:form, fn ->
-        to_form(Game.change_room_settings(room))
+        to_form(Players.change_room_settings(room))
       end)
 
     {:ok, socket}
@@ -131,7 +131,7 @@ defmodule EurekaWeb.RoomLive.Show do
 
   @impl true
   def handle_event("validate", %{"room" => room_params}, socket) do
-    changeset = Game.change_room_settings(socket.assigns.room, room_params)
+    changeset = Players.change_room_settings(socket.assigns.room, room_params)
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 

@@ -1,13 +1,13 @@
 defmodule EurekaWeb.PageLive.Home do
   use EurekaWeb, :live_view
   alias Eureka.Avatar
-  alias Eureka.Game
+  alias Eureka.Players
 
   embed_templates "components/*"
 
   @impl true
   def mount(_params, _session, socket) do
-    room_changeset = Game.change_room(%Game.Room{})
+    room_changeset = Players.change_room(%Players.Room{})
 
     socket =
       socket
@@ -31,12 +31,12 @@ defmodule EurekaWeb.PageLive.Home do
 
   @impl true
   def handle_event("validate", %{"room" => room_params}, socket) do
-    changeset = Game.change_room(%Game.Room{}, room_params)
+    changeset = Players.change_room(%Players.Room{}, room_params)
     {:noreply, assign_form(socket, Map.put(changeset, :action, :validate))}
   end
 
   def handle_event("join_room", %{"room" => %{"code" => code}}, socket) do
-    if room = Game.get_room_by_code(code) do
+    if room = Players.get_room_by_code(code) do
       num_players = Enum.count(EurekaWeb.Presence.list_online_users(room))
       {:noreply, check_room_capacity(socket, room, num_players)}
     else
@@ -51,7 +51,7 @@ defmodule EurekaWeb.PageLive.Home do
   end
 
   defp apply_action(socket, user) do
-    {:ok, room} = Game.create_room(%{user_id: user.id})
+    {:ok, room} = Players.create_room(%{user_id: user.id})
 
     socket
     |> assign(room: room)
@@ -69,7 +69,7 @@ defmodule EurekaWeb.PageLive.Home do
   end
 
   defp check_room_capacity(socket, room, num_players) do
-    if Game.can_join_room?(room, num_players) do
+    if Players.can_join_room?(room, num_players) do
       socket
       |> push_navigate(to: ~p"/rooms/#{room.code}")
     else

@@ -1,4 +1,4 @@
-defmodule Eureka.Game.Room do
+defmodule Eureka.Players.Room do
   use Ecto.Schema
   alias Eureka.Accounts.User
   import Ecto.Changeset

@@ -1,12 +1,12 @@
-defmodule Eureka.Game do
+defmodule Eureka.Players do
   @moduledoc """
-  The Game context.
+  The Players context.
   """
 
   import Ecto.Query, warn: false
   alias Eureka.Repo
 
-  alias Eureka.Game.Room
+  alias Eureka.Players.Room
 
   @doc """
   Returns the list of rooms.
@@ -111,7 +111,7 @@ defmodule Eureka.Game do
   @doc """
   Retunrns true or false if the room can be joined or not.
   It checks if the number of players in the room is less than the room capacity.
-    
+
   ## Examples
       iex> can_join_room?(%Room{capacity: 4}, 3)
       true

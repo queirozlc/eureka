@@ -10,7 +10,7 @@ defmodule EurekaWeb.Presence do
     pubsub_server: Eureka.PubSub
 
   alias Eureka.Accounts
-  alias Eureka.Game.Room
+  alias Eureka.Players.Room
 
   @pubsub Eureka.PubSub
   @topic "rooms:"

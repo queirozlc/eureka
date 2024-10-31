@@ -1,13 +1,13 @@
-defmodule Eureka.GameFixtures do
+defmodule Eureka.PlayersFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  entities via the `Eureka.Game` context.
+  entities via the `Eureka.Players` context.
   """
 
   @doc """
   Generate a unique room code.
   """
-  def unique_room_code, do: Eureka.Game.Room.generate_code()
+  def unique_room_code, do: Eureka.Players.Room.generate_code()
 
   @doc """
   Generate a room.
@@ -21,7 +21,7 @@ defmodule Eureka.GameFixtures do
         code: unique_room_code(),
         user_id: user.id
       })
-      |> Eureka.Game.create_room()
+      |> Eureka.Players.create_room()
 
     room
   end
