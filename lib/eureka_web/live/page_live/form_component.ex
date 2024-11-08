@@ -10,7 +10,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
       <.simple_form
         for={@form}
         id="guest-form"
-        class="flex flex-col gap-40 pt-10"
+        class="flex flex-col gap-4 pt-10"
         action={~p"/users/log_in?_action=guest_user/#{@guest_id}"}
         phx-target={@myself}
         phx-trigger-action={@trigger_submit}
@@ -38,7 +38,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
               id="nickname"
               label="What's your nickname?"
               placeholder="Your display name in match"
-              class="!rounded-full bg-white !outline-none !border-2 !border-black shadow-brutalism font-mono font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
+              class="bg-white !outline-none !border-2 !border-black shadow-brutalism font-mono font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
               required
             />
           </div>
