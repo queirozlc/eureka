@@ -407,7 +407,7 @@ defmodule EurekaWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-900 font-mono">
+    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-900 font-sans">
       <%= render_slot(@inner_block) %>
     </label>
     """

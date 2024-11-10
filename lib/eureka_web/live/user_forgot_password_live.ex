@@ -16,7 +16,7 @@ defmodule EurekaWeb.UserForgotPasswordLive do
         <:actions>
           <.button
             phx-disable-with="Sending..."
-            class="w-full font-mono font-medium rounded-none gap-2 !bg-brand-yellow border-2 border-black h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
+            class="w-full font-sans font-medium rounded-none gap-2 !bg-brand-yellow border-2 border-black h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
           >
             Send password reset instructions
           </.button>

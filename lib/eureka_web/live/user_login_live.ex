@@ -3,7 +3,7 @@ defmodule EurekaWeb.UserLoginLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm font-mono">
+    <div class="mx-auto max-w-sm font-sans">
       <.header class="text-center">
         Log in to account
         <:subtitle>
@@ -16,7 +16,7 @@ defmodule EurekaWeb.UserLoginLive do
       </.header>
 
       <.simple_form for={@form} id="login_form" action={~p"/users/log_in"} phx-update="ignore">
-        <.input field={@form[:email]} type="email" label="Email" required class="font-mono" />
+        <.input field={@form[:email]} type="email" label="Email" required class="font-sans" />
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
@@ -28,7 +28,7 @@ defmodule EurekaWeb.UserLoginLive do
         <:actions>
           <.button
             phx-disable-with="Logging in..."
-            class="w-full font-mono font-medium rounded-none gap-2 !bg-brand-yellow border-2 border-black hover:shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
+            class="w-full font-sans font-medium rounded-none gap-2 !bg-brand-yellow border-2 border-black hover:shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
           >
             Log in <span aria-hidden="true">→</span>
           </.button>
