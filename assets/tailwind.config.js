@@ -21,6 +21,7 @@ module.exports = {
       },
       fontFamily: {
         mono: ['"IBM Plex Mono"', "monospace"],
+        sans: ['"Space Grotesk"', "sans-serif"],
       },
       dropShadow: {
         "text-lg": "2px 2px rgb(0, 0, 0)",

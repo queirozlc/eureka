@@ -6,7 +6,7 @@
   </div>
 
   <div class="md:mt-12 mt-8 w-full bg-brand border-4 border-black shadow-brutalism-xl md:h-96 h-72 flex flex-col items-center py-4 md:px-12 px-4">
-    <h1 class="text-white font-mono text-2xl md:text-4xl font-bold mt-16">Join a room</h1>
+    <h1 class="text-white font-sans text-2xl md:text-4xl font-bold mt-16">Join a room</h1>
     <div class="flex flex-col items-center justify-center self-center grow w-full gap-8">
       <.simple_form
         class="!mt-0 !space-y-0 flex"
@@ -38,7 +38,7 @@
       </.simple_form>
 
       <button
-        class="font-mono font-medium  !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism"
+        class="font-mono font-medium !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism rounded-md"
         phx-click="create_room"
         phx-disable-with="Creating room..."
         id="create_room"

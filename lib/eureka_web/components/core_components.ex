@@ -343,7 +343,7 @@ defmodule EurekaWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="block w-full border border-black bg-white shadow-brutalism focus:border-black focus:ring-0 sm:text-sm"
+        class="block w-full border-2 border-black bg-white rounded-lg focus:border-black focus:ring-0 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >

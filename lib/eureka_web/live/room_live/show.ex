@@ -11,11 +11,11 @@ defmodule EurekaWeb.RoomLive.Show do
         Your room code is:
       </h1>
 
-      <div class="border divide-x divide-black border-black flex items-center rounded-sm bg-white shadow-brutalism pl-4 grow">
+      <div class="border border-black border-2 rounded-md divide-x divide-black border-black flex items-center bg-white pl-4 grow">
         <p class="font-mono font-medium text-xl grow select-none" id="room_code">
           <%= @room.code %>
         </p>
-        <button class="flex items-center p-1" phx-click={add_to_clipboard()}>
+        <button class="flex items-center p-1 !bg-brand border-black" phx-click={add_to_clipboard()}>
           <.icon name="hero-clipboard" />
         </button>
       </div>
@@ -68,6 +68,29 @@ defmodule EurekaWeb.RoomLive.Show do
               <h2 class="font-semibold font-mono text-xl text-center">
                 Genres
               </h2>
+              <div class="pt-1 space-y-6 ml-4">
+                <.button
+                  type="submit"
+                  class="self-center rounded-md w-[30%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+                  form="room-settings"
+                >
+                  Raggae
+                </.button>
+                <.button
+                  type="submit"
+                  class="self-center rounded-md w-[30%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+                  form="room-settings"
+                >
+                  Rock
+                </.button>
+                <.button
+                  type="submit"
+                  class="self-center rounded-md w-[30%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+                  form="room-settings"
+                >
+                  Pop
+                </.button>
+              </div>
             </div>
             <div class="pt-1 space-y-3">
               <h2 class="font-semibold font-mono text-xl text-center">
@@ -100,7 +123,7 @@ defmodule EurekaWeb.RoomLive.Show do
       </div>
       <.button
         type="submit"
-        class="self-center rounded-none w-[10%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+        class="self-center rounded-md w-[10%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
         form="room-settings"
       >
         Start
