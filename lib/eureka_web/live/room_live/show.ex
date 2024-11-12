@@ -116,6 +116,7 @@ defmodule EurekaWeb.RoomLive.Show do
     if connected?(socket) do
       Presence.subscribe(room)
       Presence.track_players(room, socket.assigns.current_user.id)
+      Eureka.GameSupervisor.subscribe_game_started(room.code)
     end
 
     socket =
@@ -135,8 +136,16 @@ defmodule EurekaWeb.RoomLive.Show do
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
-  def handle_event("start_game", %{"room" => _room_params}, socket) do
-    {:noreply, socket}
+  def handle_event("start_game", _params, %Socket{assigns: %{room: room}} = socket) do
+    players_id = Presence.get_online_users_id(room)
+
+    case Eureka.GameSupervisor.start_game(room.code, players_id) do
+      {:ok, _} ->
+        {:noreply, socket}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to start the game: #{reason}")}
+    end
   end
 
   @impl true
@@ -152,6 +161,11 @@ defmodule EurekaWeb.RoomLive.Show do
     else
       {:noreply, socket}
     end
+  end
+
+  def handle_info({:game_started, game_server_pid}, socket) do
+    game = Eureka.GameServer.game(game_server_pid)
+    {:noreply, push_navigate(socket, to: ~p"/games/#{game.id}")}
   end
 
   defp assign_presences(socket) do

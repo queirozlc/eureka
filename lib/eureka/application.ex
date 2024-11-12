@@ -12,7 +12,10 @@ defmodule Eureka.Application do
       Eureka.Repo,
       {DNSCluster, query: Application.get_env(:eureka, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Eureka.PubSub},
+      {Task.Supervisor, name: Eureka.TaskSupervisor},
       EurekaWeb.Presence,
+      # Supervisor to start games
+      Eureka.GameSupervisor,
       # Start the Finch HTTP client for sending emails
       {Finch, name: Eureka.Finch},
       # Start a worker by calling: Eureka.Worker.start_link(arg)

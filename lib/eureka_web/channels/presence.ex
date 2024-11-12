@@ -63,6 +63,12 @@ defmodule EurekaWeb.Presence do
     list("proxy:" <> topic(code))
   end
 
+  def get_online_users_id(%Room{} = room) do
+    list_online_users(room)
+    |> Map.keys()
+    |> Enum.map(&String.to_integer/1)
+  end
+
   def subscribe(%Room{code: code}) do
     Phoenix.PubSub.subscribe(@pubsub, topic(code))
   end
