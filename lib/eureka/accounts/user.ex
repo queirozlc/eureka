@@ -2,6 +2,19 @@ defmodule Eureka.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{
+          id: integer(),
+          email: String.t(),
+          nickname: String.t(),
+          password: String.t(),
+          hashed_password: String.t(),
+          current_password: String.t(),
+          avatar: String.t(),
+          confirmed_at: DateTime.t(),
+          inserted_at: DateTime.t(),
+          updated_at: DateTime.t()
+        }
+
   schema "users" do
     field :email, :string
     field :nickname, :string
