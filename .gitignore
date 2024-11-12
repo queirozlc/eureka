@@ -25,6 +25,9 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 eureka-*.tar
 
+# Ignore secrets files from config.
+/config/*.secret.exs
+
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
 
