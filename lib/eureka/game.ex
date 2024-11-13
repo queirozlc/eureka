@@ -103,6 +103,9 @@ defmodule Eureka.Game do
     }
   end
 
+  @doc """
+  Returns the score of a player
+  """
   @spec get_score(Game.t(), player_id :: non_neg_integer()) :: Game.Score.t()
   def get_score(%Game{score: score}, player_id) do
     Enum.find(score, fn %Game.Score{player: player} -> player == player_id end)
@@ -128,6 +131,37 @@ defmodule Eureka.Game do
     Enum.member?(valid_answers, guess)
   end
 
+  @doc """
+  Processes a player's song guess and updates the game state accordingly.
+
+  Takes a game state and a map containing the player's guess information. Returns a tuple
+  containing a boolean indicating if the guess was correct and the updated game state.
+
+  ## Parameters
+
+    * game - A %Game{} struct representing the current game state
+    * guess_info - A map containing:
+      * :guess - The player's song guess
+      * :player - The id of player making the guess
+
+  ## Returns
+
+    * {true, updated_game} - If the guess was correct, returns true and the game with updated score
+    * {false, game} - If the guess was incorrect, returns false and the unchanged game
+
+  ## Examples
+
+      iex> game = %Game{current_song: "Yesterday", scores: %{}}
+      iex> guess_info = %{guess: "Yesterday", player: 1}
+      iex> guess_song(game, guess_info)
+      {true, %Game{current_song: "Yesterday", scores: %{"Player1" => 1}}}
+
+      iex> game = %Game{current_song: "Hey Jude", scores: %{}}
+      iex> guess_info = %{guess: "Yesterday", player: 2}
+      iex> guess_song(game, guess_info)
+      {false, %Game{current_song: "Hey Jude", scores: %{}}}
+  """
+  @spec guess_song(Game.t(), Map.t()) :: {boolean(), Game.t()}
   def guess_song(%Game{} = game, %{guess: guess, player: player}) do
     if valid_guess?(game, guess) do
       {true, update_score(game, player)}

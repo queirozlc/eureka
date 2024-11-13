@@ -26,11 +26,17 @@ defmodule Eureka.GameServer do
     GenServer.call(game_server, :get_game)
   end
 
+  @doc """
+  Get the players in the game
+  """
   @spec get_players(pid()) :: [Accounts.User.t()]
   def get_players(game_server) do
     GenServer.call(game_server, :get_players)
   end
 
+  @doc """
+  Get the scores of the players in the game
+  """
   def get_scores(game_server) do
     GenServer.call(game_server, :get_scores)
   end
@@ -51,6 +57,9 @@ defmodule Eureka.GameServer do
     GenServer.cast(game_server, {:guess_song, %{guess: guess, player: player}})
   end
 
+  @doc """
+  Subscribe to the game's topic
+  """
   @spec subscribe_game(pid()) :: :ok
   def subscribe_game(game_server) do
     game = game(game_server)
