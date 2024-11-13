@@ -55,6 +55,7 @@ defmodule EurekaWeb.GameLive.Show do
             type="text"
             id="guessing"
             field={@form[:guess]}
+            disabled={player_scored?(@current_user.id, @scores) || @loading}
             name="guessing"
             label="What song?"
             placeholder="Your guess"
@@ -87,6 +88,7 @@ defmodule EurekaWeb.GameLive.Show do
            game_server_pid: game_server_pid,
            players: players,
            scores: scores,
+           valid_answers: [],
            loading: true
          )
          |> assign_new(:form, fn ->
@@ -115,7 +117,10 @@ defmodule EurekaWeb.GameLive.Show do
   end
 
   @impl true
-  def handle_info({:guess_result, %{score: %Game.Score{player: player, score: score}}}, socket) do
+  def handle_info(
+        {:guess_result, %{score: %Game.Score{player: player, score: score}}},
+        socket
+      ) do
     socket =
       socket
       |> assign(
@@ -127,5 +132,9 @@ defmodule EurekaWeb.GameLive.Show do
       )
 
     {:noreply, socket}
+  end
+
+  defp player_scored?(player_id, scores) do
+    Enum.find(scores, fn {id, _} -> id == player_id end) |> elem(1) != 0
   end
 end
