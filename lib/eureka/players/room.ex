@@ -7,7 +7,7 @@ defmodule Eureka.Players.Room do
     field :code, :string
     field :capacity, :integer, default: 2
     field :score, :integer, default: 0
-    field :genres, {:array, :string}, default: []
+    field :genres, {:array, :string}
     field :last_played_at, :utc_datetime
     belongs_to :user, User
 
