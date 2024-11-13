@@ -58,7 +58,7 @@ defmodule EurekaWeb.RoomLive.Show do
                   <.input
                     type="select"
                     field={@form[:score]}
-                    options={[10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
+                    options={50..120//10}
                     value={@form[:score].value || 10}
                   />
                 </li>
@@ -133,10 +133,15 @@ defmodule EurekaWeb.RoomLive.Show do
   @impl true
   def handle_event("validate", %{"room" => room_params}, socket) do
     changeset = Players.change_room_settings(socket.assigns.room, room_params)
+
+    if changeset.valid? do
+      Players.update_room(socket.assigns.room, room_params)
+    end
+
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
-  def handle_event("start_game", _params, %Socket{assigns: %{room: room}} = socket) do
+  def handle_event("start_game", _params, %{assigns: %{room: room}} = socket) do
     players_id = Presence.get_online_users_id(room)
 
     case Eureka.GameSupervisor.start_game(room.code, players_id) do
