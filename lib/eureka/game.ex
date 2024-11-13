@@ -116,10 +116,7 @@ defmodule Eureka.Game do
   """
   @spec countdown_timer(Game.t()) :: Game.t()
   def countdown_timer(%__MODULE__{} = game) do
-    %Game{
-      game
-      | song_timer: game.song_timer - :timer.seconds(1)
-    }
+    %Game{game | song_timer: game.song_timer - :timer.seconds(1)}
   end
 
   @doc """

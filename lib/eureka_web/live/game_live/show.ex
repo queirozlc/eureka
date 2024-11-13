@@ -15,6 +15,12 @@ defmodule EurekaWeb.GameLive.Show do
       class="hidden"
     />
 
+    <%= if @loading == false && @countdown > 0 do %>
+      <h3>
+        <%= @countdown %> / <%= @duration %>
+      </h3>
+    <% end %>
+
     <section class="grid grid-cols-3 h-[calc(100vh-14rem)] gap-20">
       <aside class="bg-white space-y-4 shadow-brutalism min-w-20 border-2 border-black px-6 py-4">
         <h3 class="font-mono text-xl text-center font-semibold">Leaderboard</h3>
@@ -88,7 +94,10 @@ defmodule EurekaWeb.GameLive.Show do
            game_server_pid: game_server_pid,
            players: players,
            scores: scores,
+           song: game.current_song,
            valid_answers: [],
+           countdown: 0,
+           duration: 0,
            loading: true
          )
          |> assign_new(:form, fn ->
@@ -116,7 +125,10 @@ defmodule EurekaWeb.GameLive.Show do
     {:noreply, assign(socket, song: song, loading: false)}
   end
 
-  @impl true
+  def handle_info({:countdown, %{countdown: countdown, duration: duration}}, socket) do
+    {:noreply, assign(socket, countdown: countdown, duration: duration)}
+  end
+
   def handle_info(
         {:guess_result, %{score: %Game.Score{player: player, score: score}}},
         socket

@@ -76,7 +76,7 @@ defmodule Eureka.GameServer do
 
   @impl true
   def handle_cast(:timer, game) do
-    Process.send(self(), :countdown, [])
+    Process.send_after(self(), :countdown, 1_000)
     {:noreply, game}
   end
 
@@ -107,10 +107,6 @@ defmodule Eureka.GameServer do
   end
 
   def handle_info({_ref, %Song.Response{} = fetched_song}, %Game{} = game) do
-    # After fetch and broadcast song, now i need to start the timer for the song
-    # and then broadcast the timer, the timer will be the countdown for the song
-    # and then when the timer is done, i need to fetch the next song
-
     Logger.info("Fetched song: #{inspect(fetched_song)}")
 
     {:noreply,
@@ -125,7 +121,13 @@ defmodule Eureka.GameServer do
       {:noreply, game}
     else
       Logger.debug("Countdown: #{current_timer}")
-      Process.send_after(self(), :countdown, :timer.seconds(1))
+
+      countdown = div(current_timer, 1000)
+      duration = div(Song.duration(game.current_song), 1000)
+      broadcast_update!(game, {:countdown, %{duration: duration, countdown: countdown}})
+
+      Process.send_after(self(), :countdown, 1000)
+
       {:noreply, game}
     end
   end
