@@ -5,8 +5,11 @@ defmodule Eureka.Game do
   alias __MODULE__
   alias Eureka.Song
 
+  @guess_threshold 0.85
+
   @type t :: %{
           id: String.t(),
+          owner: pid(),
           room_code: String.t(),
           song_queue: [Song.t()],
           current_song: Song.Response.t(),
@@ -15,11 +18,13 @@ defmodule Eureka.Game do
           winner: integer(),
           valid_answers: [String.t()],
           players: [integer()],
-          song_timer: non_neg_integer()
+          song_timer: non_neg_integer(),
+          timer_ref: reference()
         }
 
   @enforce_keys [
     :id,
+    :owner,
     :room_code,
     :song_queue,
     :current_song,
@@ -28,10 +33,12 @@ defmodule Eureka.Game do
     :winner,
     :valid_answers,
     :players,
-    :song_timer
+    :song_timer,
+    :timer_ref
   ]
   defstruct [
     :id,
+    :owner,
     :room_code,
     :song_queue,
     :current_song,
@@ -40,7 +47,8 @@ defmodule Eureka.Game do
     :winner,
     :valid_answers,
     :players,
-    :song_timer
+    :song_timer,
+    :timer_ref
   ]
 
   @spec new_game(integer(), [integer()]) :: Game.t()
@@ -48,23 +56,24 @@ defmodule Eureka.Game do
     queue = [
       # This will be mocked for now but will come through AI in the future
       %Song{
-        artist: "Matuê",
-        track: "333"
-      },
-      %Song{
         artist: "Adele",
         track: "Easy On Me"
-      },
-      %Song{
-        artist: "Rihanna",
-        track: "Umbrella"
       }
+      # %Song{
+      #   artist: "Orochi",
+      #   track: "Mesma História"
+      # },
+      # %Song{
+      #   artist: "Matuê",
+      #   track: "4TAL"
+      # }
     ]
 
-    score = Enum.map(players, fn player_id -> %Game.Score{score: 0, player: player_id} end)
+    score = Enum.map(players, &%Game.Score{score: 0, player: &1})
 
     %Eureka.Game{
       id: generate_game_id(),
+      owner: nil,
       room_code: room_code,
       song_queue: queue,
       current_song: nil,
@@ -73,16 +82,17 @@ defmodule Eureka.Game do
       winner: nil,
       valid_answers: [],
       players: players,
-      song_timer: 0
+      song_timer: 0,
+      timer_ref: nil
     }
   end
 
   @doc """
   Returns the next song in the queue
   """
-  @spec next_song(game :: Game.t()) :: Song.t()
+  @spec next_song(game :: Game.t()) :: Song.t() | nil
   def next_song(%__MODULE__{song_queue: song_queue}) do
-    hd(song_queue)
+    if Enum.empty?(song_queue), do: nil, else: Enum.at(song_queue, 0)
   end
 
   @doc """
@@ -90,7 +100,7 @@ defmodule Eureka.Game do
   """
   @spec update_song(game :: Game.t(), song :: Song.Response.t()) :: Game.t()
   def update_song(%__MODULE__{} = game, %Song.Response{} = current_song) do
-    song_queue = tl(game.song_queue)
+    [_ | song_queue] = game.song_queue
 
     %Game{
       game
@@ -124,8 +134,8 @@ defmodule Eureka.Game do
   """
   @spec valid_guess?(Game.t(), String.t()) :: boolean()
   def valid_guess?(%Game{valid_answers: valid_answers}, guess) do
-    guess = String.normalize(guess, :nfd) |> String.trim() |> String.downcase()
-    Enum.member?(valid_answers, guess)
+    guess = guess |> String.normalize(:nfd) |> String.trim() |> String.downcase()
+    Enum.any?(valid_answers, &(String.jaro_distance(&1, guess) > @guess_threshold))
   end
 
   @doc """
@@ -187,7 +197,8 @@ defmodule Eureka.Game do
   # This function will return the valid answers for the current song
   # The main idea is to handle the possible cases of the user input
   # Take the song "Easy on Me" by Adele as an example
-  # The valid answers will be ["Easy on Me", "easy on me", "Adele - Easy on Me", "adele - easy on me", "EASY ON ME", "ADELE - EASY ON ME", "easy on me - adele", "EASY ON ME - ADELE"]
+  # The valid answers will be
+  # ["Easy on Me", "easy on me", "Adele - Easy on Me", "adele - easy on me", "EASY ON ME", "ADELE - EASY ON ME", "easy on me - adele", "EASY ON ME - ADELE"]
   defp get_valid_answers(%Song{track: track, artist: artist}) do
     artist = String.normalize(artist, :nfd)
 
