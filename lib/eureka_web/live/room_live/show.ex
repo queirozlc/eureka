@@ -102,6 +102,7 @@ defmodule EurekaWeb.RoomLive.Show do
         type="submit"
         class="self-center rounded-none w-[10%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
         form="room-settings"
+        phx-disable-with="Starting..."
       >
         Start
       </.button>
@@ -116,7 +117,7 @@ defmodule EurekaWeb.RoomLive.Show do
     if connected?(socket) do
       Presence.subscribe(room)
       Presence.track_players(room, socket.assigns.current_user.id)
-      Eureka.GameSupervisor.subscribe_game_started(room.code)
+      Eureka.GameSupervisor.subscribe_game_start(room.code)
     end
 
     socket =

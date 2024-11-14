@@ -37,16 +37,26 @@ defmodule Eureka.GameServer do
   @doc """
   Get the scores of the players in the game
   """
+  @spec get_scores(pid()) :: %{String.t() => Game.Score.t()}
   def get_scores(game_server) do
     GenServer.call(game_server, :get_scores)
   end
 
   @doc """
-  Starts the countdown for the current song
+  Check if the calling process is the owner of the game
+
+  ## Examples
+    iex> GameServer.owner?(game_server_pid, self())
+    true
   """
-  @spec song_countdown(pid()) :: :ok
-  def song_countdown(game_server) do
-    GenServer.cast(game_server, :timer)
+  @spec owner?(pid(), pid()) :: boolean()
+  def owner?(game_server, pid) do
+    GenServer.call(game_server, {:owner?, pid})
+  end
+
+  @spec set_owner(pid(), pid()) :: :ok
+  def set_owner(game_server, owner_pid) do
+    GenServer.cast(game_server, {:set_owner, owner_pid})
   end
 
   @doc """
@@ -69,15 +79,25 @@ defmodule Eureka.GameServer do
   # Server API
 
   @impl true
-  def handle_continue(:fetch_song, %Game{} = game) do
-    Song.search(Game.next_song(game))
-    {:noreply, game}
+  def handle_continue(:fetch_song, %Game{timer_ref: timer_ref} = game) do
+    if current_song = Game.next_song(game) do
+      Song.search(current_song)
+      {:noreply, game}
+    else
+      Process.cancel_timer(timer_ref)
+      broadcast_update!(game, :game_over)
+      {:noreply, game}
+    end
   end
 
   @impl true
   def handle_cast(:timer, game) do
     Process.send_after(self(), :countdown, 1_000)
     {:noreply, game}
+  end
+
+  def handle_cast({:set_owner, owner_pid}, %Game{} = game) do
+    {:noreply, %Game{game | owner: owner_pid}}
   end
 
   def handle_cast({:guess_song, %{guess: guess, player: player}}, %Game{} = game) do
@@ -90,6 +110,10 @@ defmodule Eureka.GameServer do
   @impl true
   def handle_call(:get_game, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call({:owner?, pid}, _from, %Game{owner: owner} = game) do
+    {:reply, pid == owner, game}
   end
 
   def handle_call(:get_players, _from, %Game{} = game) do
@@ -109,26 +133,35 @@ defmodule Eureka.GameServer do
   def handle_info({_ref, %Song.Response{} = fetched_song}, %Game{} = game) do
     Logger.info("Fetched song: #{inspect(fetched_song)}")
 
-    {:noreply,
-     Game.update_song(game, fetched_song)
-     |> broadcast_update!({:current_song, fetched_song})}
+    game =
+      game
+      |> Game.update_song(fetched_song)
+      |> broadcast_update!({:current_song, fetched_song})
+
+    if game.timer_ref, do: Process.cancel_timer(game.timer_ref)
+
+    new_timer_ref = Process.send_after(self(), :countdown, 1_000)
+
+    {:noreply, %Game{game | timer_ref: new_timer_ref}}
   end
 
   def handle_info(:countdown, %Game{} = game) do
     %Game{song_timer: current_timer} = game = Game.countdown_timer(game)
 
-    if current_timer <= 0 do
-      {:noreply, game}
-    else
-      Logger.debug("Countdown: #{current_timer}")
+    cond do
+      current_timer == 0 ->
+        {:noreply, game, {:continue, :fetch_song}}
 
-      countdown = div(current_timer, 1000)
-      duration = div(Song.duration(game.current_song), 1000)
-      broadcast_update!(game, {:countdown, %{duration: duration, countdown: countdown}})
+      true ->
+        Logger.debug("Countdown: #{current_timer}")
 
-      Process.send_after(self(), :countdown, 1000)
+        countdown = div(current_timer, 1000)
+        duration = div(Song.duration(game.current_song), 1000)
+        broadcast_update!(game, {:countdown, %{duration: duration, countdown: countdown}})
 
-      {:noreply, game}
+        new_timer_ref = Process.send_after(self(), :countdown, 1000)
+
+        {:noreply, %Game{game | timer_ref: new_timer_ref}}
     end
   end
 

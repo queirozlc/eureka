@@ -2,6 +2,8 @@ defmodule Eureka.GameSupervisor do
   use DynamicSupervisor
   alias Eureka.GameServer
 
+  @pubsub Eureka.PubSub
+
   @impl true
   def init(_opts) do
     DynamicSupervisor.init(strategy: :one_for_one)
@@ -28,13 +30,36 @@ defmodule Eureka.GameSupervisor do
     end
   end
 
-  def subscribe_game_started(room_code) do
-    Phoenix.PubSub.subscribe(Eureka.PubSub, "game_started:#{room_code}")
+  @doc """
+  Removes a game from the supervisor
+  """
+  @spec remove_game(game_id :: non_neg_integer()) ::
+          {:ok, pid()} | {:error, :game_not_found} | :error
+  def remove_game(game_id) do
+    with {:ok, game_pid, game} <- get_game(game_id),
+         :ok <- DynamicSupervisor.terminate_child(__MODULE__, game_pid) do
+      broadcast_game_end!(game.id)
+      {:ok, game_pid}
+    else
+      {:error, :game_not_found} ->
+        {:error, :game_not_found}
+
+      _ ->
+        :error
+    end
   end
 
-  def broadcast_game_started(room_code, game_server_pid) do
+  def subscribe_game_start(room_code) do
+    Phoenix.PubSub.subscribe(@pubsub, "game_started:#{room_code}")
+  end
+
+  defp broadcast_game_end!(game_id) do
+    Phoenix.PubSub.broadcast!(@pubsub, "game:" <> game_id, :game_ended)
+  end
+
+  defp broadcast_game_started(room_code, game_server_pid) do
     Phoenix.PubSub.broadcast!(
-      Eureka.PubSub,
+      @pubsub,
       "game_started:#{room_code}",
       {:game_started, game_server_pid}
     )
@@ -48,6 +73,8 @@ defmodule Eureka.GameSupervisor do
     |> Enum.map(&Task.await/1)
   end
 
+  @spec get_game(game_id :: non_neg_integer()) ::
+          {:ok, pid(), Eureka.Game.t()} | {:error, :game_not_found}
   def get_game(game_id) do
     case Enum.find(games(), fn {_pid, %Eureka.Game{id: id}} -> id == game_id end) do
       nil -> {:error, :game_not_found}

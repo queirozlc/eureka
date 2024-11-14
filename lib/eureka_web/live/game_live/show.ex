@@ -1,19 +1,11 @@
 defmodule EurekaWeb.GameLive.Show do
   use EurekaWeb, :live_view
-  alias Eureka.{Game, GameServer, GameSupervisor, Song}
+  alias Eureka.{Game, GameServer, GameSupervisor, Players, Song}
 
   @impl true
   def render(assigns) do
     ~H"""
-    <audio
-      :if={@loading == false}
-      id="audio"
-      src={@song.preview_url}
-      controls
-      autoplay
-      preload
-      class="hidden"
-    />
+    <audio :if={@loading == false} id="audio" src={@song.preview_url} autoplay />
 
     <%= if @loading == false && @countdown > 0 do %>
       <h3>
@@ -78,6 +70,8 @@ defmodule EurekaWeb.GameLive.Show do
   def mount(%{"game_id" => game_id}, _session, socket) do
     case GameSupervisor.get_game(game_id) do
       {:ok, game_server_pid, game} ->
+        GameServer.set_owner(game_server_pid, self())
+
         if connected?(socket) do
           GameServer.subscribe_game(game_server_pid)
         end
@@ -98,7 +92,8 @@ defmodule EurekaWeb.GameLive.Show do
            valid_answers: [],
            countdown: 0,
            duration: 0,
-           loading: true
+           loading: game.current_song == nil,
+           song: game.current_song
          )
          |> assign_new(:form, fn ->
            to_form(%{"guess" => ""})
@@ -121,12 +116,30 @@ defmodule EurekaWeb.GameLive.Show do
 
   @impl true
   def handle_info({:current_song, %Song.Response{} = song}, socket) do
-    GameServer.song_countdown(socket.assigns.game_server_pid)
     {:noreply, assign(socket, song: song, loading: false)}
   end
 
   def handle_info({:countdown, %{countdown: countdown, duration: duration}}, socket) do
     {:noreply, assign(socket, countdown: countdown, duration: duration)}
+  end
+
+  def handle_info(:game_over, socket) do
+    owner? = GameServer.owner?(socket.assigns.game_server_pid, self())
+
+    if owner?, do: GameSupervisor.remove_game(socket.assigns.game.id)
+
+    {:noreply, socket}
+  end
+
+  def handle_info(:game_ended, socket) do
+    room_code = socket.assigns.game.room_code
+    current_user_id = socket.assigns.current_user.id
+
+    if Players.owner?(room_code, current_user_id) do
+      {:noreply, push_navigate(socket, to: ~p"/rooms/#{room_code}/settings")}
+    else
+      {:noreply, push_navigate(socket, to: ~p"/rooms/#{room_code}")}
+    end
   end
 
   def handle_info(
