@@ -53,6 +53,13 @@ defmodule Eureka.Players do
     |> Repo.one()
   end
 
+  def owner?(room_code, user_id) do
+    case get_room_by_code(room_code) do
+      nil -> false
+      %Room{user_id: owner_id} -> owner_id == user_id
+    end
+  end
+
   @doc """
   Creates a room.
 

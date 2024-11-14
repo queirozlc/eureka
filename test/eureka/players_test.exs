@@ -38,6 +38,20 @@ defmodule Eureka.PlayersTest do
       assert nil == Players.get_room_by_code("invalid")
     end
 
+    test "owner?/2 returns true when user is owner of the room" do
+      room = room_fixture()
+      assert Players.owner?(room.code, room.user_id)
+    end
+
+    test "owner?/2 returns false when room do not exist" do
+      refute Players.owner?("invalid", 1)
+    end
+
+    test "owner?/2 returns false when user is not owner of the room" do
+      room = room_fixture()
+      refute Players.owner?(room.code, 1)
+    end
+
     test "create_room/1 with valid data creates a room", %{user: user} do
       valid_attrs = %{user_id: user.id}
 
