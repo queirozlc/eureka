@@ -76,6 +76,10 @@ defmodule Eureka.GameServer do
     PubSub.subscribe(@pubsub, topic(game.id))
   end
 
+  def leave_game(game_server, user_id) do
+    GenServer.cast(game_server, {:leave_game, user_id})
+  end
+
   # Server API
 
   @impl true
@@ -104,6 +108,12 @@ defmodule Eureka.GameServer do
     {valid?, game} = Game.guess_song(game, %{guess: guess, player: player})
     score = Game.get_score(game, player)
     broadcast_update!(game, {:guess_result, %{score: score, valid?: valid?}})
+    {:noreply, game}
+  end
+
+  def handle_cast({:leave_game, user_id}, %Game{} = game) do
+    game = Game.leave(game, user_id)
+    broadcast_update!(game, {:player_left, game})
     {:noreply, game}
   end
 

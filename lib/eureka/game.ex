@@ -177,6 +177,11 @@ defmodule Eureka.Game do
     end
   end
 
+  def leave(%Game{} = game, user_id) do
+    players = Enum.reject(game.players, &(&1 == user_id))
+    %Game{game | players: players}
+  end
+
   defp update_score(%Game{} = game, player) do
     score =
       Enum.map(game.score, fn %Game.Score{player: player_id, score: score} ->

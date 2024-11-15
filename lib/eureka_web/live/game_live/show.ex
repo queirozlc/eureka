@@ -1,6 +1,7 @@
 defmodule EurekaWeb.GameLive.Show do
   use EurekaWeb, :live_view
   alias Eureka.{Game, GameServer, GameSupervisor, Players, Song}
+  alias EurekaWeb.Presence
 
   @impl true
   def render(assigns) do
@@ -71,9 +72,11 @@ defmodule EurekaWeb.GameLive.Show do
     case GameSupervisor.get_game(game_id) do
       {:ok, game_server_pid, game} ->
         GameServer.set_owner(game_server_pid, self())
+        room = Players.get_room_by_code(game.room_code)
 
         if connected?(socket) do
           GameServer.subscribe_game(game_server_pid)
+          Presence.track_players(room, socket.assigns.current_user.id)
         end
 
         scores =
@@ -157,6 +160,17 @@ defmodule EurekaWeb.GameLive.Show do
       )
 
     {:noreply, socket}
+  end
+
+  def handle_info({:player_left, %Game{} = game}, socket) do
+    players = Eureka.Accounts.get_users_map(game.players)
+    {:noreply, assign(socket, players: players)}
+  end
+
+  @impl true
+  def terminate({:shutdown, :left}, socket) do
+    game_pid = socket.assigns.game_server_pid
+    GameServer.leave_game(game_pid, socket.assigns.current_user.id)
   end
 
   defp player_scored?(player_id, scores) do
