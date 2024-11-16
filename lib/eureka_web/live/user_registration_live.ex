@@ -7,7 +7,7 @@ defmodule EurekaWeb.UserRegistrationLive do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
-      <.header class="text-center font-mono">
+      <.header class="text-center font-sans">
         Register for an account
         <:subtitle>
           Already registered?
@@ -31,13 +31,13 @@ defmodule EurekaWeb.UserRegistrationLive do
           Oops, something went wrong! Please check the errors below.
         </.error>
 
-        <.input field={@form[:email]} type="email" label="Email" required class="font-mono" />
+        <.input field={@form[:email]} type="email" label="Email" required class="font-sans" />
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
           <.button
             phx-disable-with="Creating account..."
-            class="w-full font-mono font-medium rounded-none gap-2 !bg-brand-yellow border-2 border-black hover:shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
+            class="w-full font-sans font-medium rounded-none gap-2 !bg-brand-yellow border-2 border-black hover:shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
           >
             Create an account
           </.button>

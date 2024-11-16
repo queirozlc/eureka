@@ -51,7 +51,11 @@ defmodule EurekaWeb.CoreComponents do
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
       class="relative z-50 hidden"
     >
-      <div id={"#{@id}-bg"} class="bg-black/70 fixed inset-0 transition-opacity" aria-hidden="true" />
+      <div
+        id={"#{@id}-bg"}
+        class="bg-zinc-900/90 fixed inset-0 transition-opacity"
+        aria-hidden="true"
+      />
       <div
         class="fixed inset-0 overflow-y-auto"
         aria-labelledby={"#{@id}-title"}
@@ -67,7 +71,7 @@ defmodule EurekaWeb.CoreComponents do
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-cream p-6 shadow-lg ring-1 transition"
+              class="relative hidden bg-cream p-6 shadow-brutalism-xl border-4 border-black transition"
             >
               <div class="absolute top-6 right-5">
                 <button
@@ -343,7 +347,7 @@ defmodule EurekaWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="block w-full border border-black bg-white shadow-brutalism focus:border-black focus:ring-0 sm:text-sm"
+        class="block w-full border-2 border-black bg-white rounded-lg focus:border-black focus:ring-0 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >
@@ -407,7 +411,7 @@ defmodule EurekaWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-900 font-mono">
+    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-900 font-sans">
       <%= render_slot(@inner_block) %>
     </label>
     """

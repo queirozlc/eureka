@@ -7,22 +7,22 @@ defmodule EurekaWeb.RoomLive.Show do
   def render(assigns) do
     ~H"""
     <div class="flex items-center gap-1 max-w-md mx-auto">
-      <h1 class="text-lg font-mono text-nowrap font-semibold leading-8 text-zinc-800">
+      <h1 class="text-lg font-sans text-nowrap font-semibold leading-8 text-zinc-800">
         Your room code is:
       </h1>
 
-      <div class="border divide-x divide-black border-black flex items-center rounded-sm bg-white shadow-brutalism pl-4 grow">
-        <p class="font-mono font-medium text-xl grow select-none" id="room_code">
+      <div class="border border-black border-2 rounded-md divide-x divide-black border-black flex items-center bg-white pl-4 grow">
+        <p class="font-sans font-medium text-xl grow select-none" id="room_code">
           <%= @room.code %>
         </p>
-        <button class="flex items-center p-1" phx-click={add_to_clipboard()}>
+        <button class="flex items-center p-1 !bg-brand border-black" phx-click={add_to_clipboard()}>
           <.icon name="hero-clipboard" />
         </button>
       </div>
     </div>
 
     <div class="w-full bg-white border-2 px-8 border-black shadow-brutalism mt-10 py-10 flex flex-col gap-8">
-      <h1 class="text-2xl md:text-3xl font-bold font-mono text-contrast-yellow text-center font-outline-05 select-none drop-shadow-text md:font-outline-05">
+      <h1 class="text-2xl md:text-3xl font-bold font-sans text-contrast-yellow text-center font-outline-05 select-none drop-shadow-text md:font-outline-05">
         Let's setup your room
       </h1>
 
@@ -30,7 +30,7 @@ defmodule EurekaWeb.RoomLive.Show do
         <.simple_form for={@form} phx-submit="start_game" phx-change="validate" id="room-settings">
           <div class="grid grid-cols-3 divide-x-4 divide-black min-h-60">
             <div class="space-y-6 pt-1">
-              <h2 class="font-semibold font-mono text-xl">
+              <h2 class="font-semibold font-sans text-xl">
                 Settings
               </h2>
 
@@ -38,7 +38,7 @@ defmodule EurekaWeb.RoomLive.Show do
                 <li class="flex items-center justify-between">
                   <div class="gap-1 flex items-center">
                     <.icon name="hero-user" class="size-6" />
-                    <p class="font-mono md:text-lg font-medium text-center">Players</p>
+                    <p class="font-sans md:text-lg font-medium text-center">Players</p>
                   </div>
 
                   <.input
@@ -52,7 +52,7 @@ defmodule EurekaWeb.RoomLive.Show do
                 <li class="flex items-center justify-between">
                   <div class="gap-1 flex items-center">
                     <.icon name="hero-trophy" class="size-6" />
-                    <p class="font-mono md:text-lg font-medium text-center">Points</p>
+                    <p class="font-sans md:text-lg font-medium text-center">Points</p>
                   </div>
 
                   <.input
@@ -65,12 +65,35 @@ defmodule EurekaWeb.RoomLive.Show do
               </ul>
             </div>
             <div class="col-span-1">
-              <h2 class="font-semibold font-mono text-xl text-center">
+              <h2 class="font-semibold font-sans text-xl text-center">
                 Genres
               </h2>
+              <div class="pt-1 space-y-6 ml-4">
+                <.button
+                  type="submit"
+                  class="self-center rounded-md w-[30%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+                  form="room-settings"
+                >
+                  Raggae
+                </.button>
+                <.button
+                  type="submit"
+                  class="self-center rounded-md w-[30%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+                  form="room-settings"
+                >
+                  Rock
+                </.button>
+                <.button
+                  type="submit"
+                  class="self-center rounded-md w-[30%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+                  form="room-settings"
+                >
+                  Pop
+                </.button>
+              </div>
             </div>
             <div class="pt-1 space-y-3">
-              <h2 class="font-semibold font-mono text-xl text-center">
+              <h2 class="font-semibold font-sans text-xl text-center">
                 Online Players
               </h2>
 
@@ -83,11 +106,11 @@ defmodule EurekaWeb.RoomLive.Show do
                   <div class="flex items-center gap-2">
                     <div class="size-12 rounded-full"><%= user.avatar |> raw() %></div>
                     <%= if user.id == @current_user.id do %>
-                      <p class="font-mono font-medium text-lg text-center">
+                      <p class="font-sans font-medium text-lg text-center">
                         You
                       </p>
                     <% else %>
-                      <p class="font-mono font-medium text-lg text-center">
+                      <p class="font-sans font-medium text-lg text-center">
                         <%= user.nickname || user.email %>
                       </p>
                     <% end %>
@@ -100,7 +123,7 @@ defmodule EurekaWeb.RoomLive.Show do
       </div>
       <.button
         type="submit"
-        class="self-center rounded-none w-[10%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
+        class="self-center rounded-md w-[10%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
         form="room-settings"
         phx-disable-with="Starting..."
       >

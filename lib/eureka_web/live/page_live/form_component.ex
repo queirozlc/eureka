@@ -10,7 +10,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
       <.simple_form
         for={@form}
         id="guest-form"
-        class="flex flex-col gap-40 pt-10"
+        class="flex flex-col gap-4 pt-10"
         action={~p"/users/log_in?_action=guest_user/#{@guest_id}"}
         phx-target={@myself}
         phx-trigger-action={@trigger_submit}
@@ -38,7 +38,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
               id="nickname"
               label="What's your nickname?"
               placeholder="Your display name in match"
-              class="!rounded-full bg-white !outline-none !border-2 !border-black shadow-brutalism font-mono font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
+              class="bg-white !outline-none !border-2 !border-black shadow-brutalism font-sans font-medium h-12 focus:ring-offset-0 focus:ring-0 focus:border-current"
               required
             />
           </div>
@@ -46,7 +46,7 @@ defmodule EurekaWeb.PageLive.FormComponent do
 
         <div class="flex flex-col items-center space-y-2">
           <button
-            class="py-3 font-mono font-medium !bg-contrast-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism gap-2"
+            class="py-3 font-sans font-medium !bg-contrast-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism gap-2"
             type="submit"
           >
             <%= @submit_label %>
@@ -54,14 +54,14 @@ defmodule EurekaWeb.PageLive.FormComponent do
 
           <div class="flex items-center gap-2 w-[50%]">
             <span class="flex-1 border-t-2 border-gray-200" />
-            <span class="text-sm font-mono leading-6 text-zinc-900 font-semibold">
+            <span class="text-sm font-sans leading-6 text-zinc-900 font-semibold">
               or
             </span>
             <span class="flex-1 border-t-2 border-gray-200" />
           </div>
 
           <.link
-            class="text-lg font-mono leading-6 text-zinc-900 font-semibold hover:text-zinc-700 hover:underline underline-offset-2"
+            class="text-lg font-sans leading-6 text-zinc-900 font-semibold hover:text-zinc-700 hover:underline underline-offset-2"
             navigate={~p"/users/log_in"}
           >
             Log in

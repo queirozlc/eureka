@@ -5,7 +5,7 @@ defmodule EurekaWeb.UserSettingsLive do
 
   def render(assigns) do
     ~H"""
-    <.header class="text-center font-mono">
+    <.header class="text-center font-sans">
       Account Settings
       <:subtitle>Manage your account email address and password settings</:subtitle>
     </.header>
@@ -18,7 +18,7 @@ defmodule EurekaWeb.UserSettingsLive do
           phx-submit="update_email"
           phx-change="validate_email"
         >
-          <.input field={@email_form[:email]} type="email" label="Email" required class="font-mono" />
+          <.input field={@email_form[:email]} type="email" label="Email" required class="font-sans" />
           <.input
             field={@email_form[:current_password]}
             name="current_password"
@@ -29,7 +29,7 @@ defmodule EurekaWeb.UserSettingsLive do
             required
           />
           <:actions>
-            <.button phx-disable-with="Changing..." class="font-mono">Change Email</.button>
+            <.button phx-disable-with="Changing..." class="font-sans">Change Email</.button>
           </:actions>
         </.simple_form>
       </div>
@@ -65,7 +65,7 @@ defmodule EurekaWeb.UserSettingsLive do
             required
           />
           <:actions>
-            <.button phx-disable-with="Changing..." class="font-mono">Change Password</.button>
+            <.button phx-disable-with="Changing..." class="font-sans">Change Password</.button>
           </:actions>
         </.simple_form>
       </div>

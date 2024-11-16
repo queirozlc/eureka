@@ -6,7 +6,7 @@
         <.link
           :if={@live_action != :index}
           href={~p"/users/settings"}
-          class="text-[0.8125rem] font-mono leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          class="text-[0.8125rem] font-sans leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
         >
           Settings
         </.link>
@@ -15,7 +15,7 @@
         <.link
           href={~p"/users/log_out"}
           method="delete"
-          class="text-[0.8125rem] font-mono leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+          class="text-[0.8125rem] font-sans leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
         >
           Log out
         </.link>
@@ -24,7 +24,7 @@
       <li>
         <.link
           href={~p"/users/register"}
-          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700 font-mono hover:underline underline-offset-2"
+          class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700 font-sans hover:underline underline-offset-2"
         >
           Register
         </.link>
@@ -32,7 +32,7 @@
       <li>
         <.link
           href={~p"/users/log_in"}
-          class="text-[0.8125rem] font-mono leading-6 text-zinc-900 font-semibold hover:text-zinc-700 hover:underline underline-offset-2"
+          class="text-[0.8125rem] font-sans leading-6 text-zinc-900 font-semibold hover:text-zinc-700 hover:underline underline-offset-2"
         >
           Log in
         </.link>

@@ -1,19 +1,12 @@
 <div class="flex flex-col items-center justify-center gap-8 max-w-2xl mx-auto">
   <div class="text-center flex flex-col space-y-2 items-center">
-    <h1 class="ext-4xl md:text-6xl font-bold font-mono text-contrast-yellow font-outline-05 select-none drop-shadow-text-lg md:font-outline">
+    <h1 class="ext-4xl md:text-6xl font-bold font-sans text-contrast-yellow font-outline-05 select-none drop-shadow-text-lg md:font-outline">
       Listen and Guess
     </h1>
-    <div>
-      <strong class="text-2xl font-mono text-black font-semibold">Join a room</strong>
-      <p class="text-2xl select-none font-mono text-contrast-yellow font-semibold drop-shadow-text font-outline-05">
-        or
-      </p>
-      <strong class="text-2xl font-mono text-black font-semibold">Create a new one</strong>
-    </div>
   </div>
 
   <div class="md:mt-12 mt-8 w-full bg-brand border-4 border-black shadow-brutalism-xl md:h-96 h-72 flex flex-col items-center py-4 md:px-12 px-4">
-    <h1 class="text-white font-mono text-2xl md:text-4xl font-bold">Join a room</h1>
+    <h1 class="text-white font-sans text-2xl md:text-4xl font-bold mt-16">Join a room</h1>
     <div class="flex flex-col items-center justify-center self-center grow w-full gap-8">
       <.simple_form
         class="!mt-0 !space-y-0 flex"
@@ -31,12 +24,12 @@
           field={@form[:code]}
           type="text"
           placeholder="Type the room code"
-          class="!rounded-l-lg !rounded-r-none !mt-0 bg-white outline-none border-2 !border-black shadow-brutalism font-mono font-medium !text-lg h-10 !w-full !focus:ring-offset-0 !focus:ring-0 focus:border-current"
+          class="!rounded-l-lg !rounded-r-none !mt-0 bg-white outline-none border-2 !border-black shadow-brutalism font-sans font-medium !text-lg h-10 !w-full !focus:ring-offset-0 !focus:ring-0 focus:border-current"
           required
         />
         <:actions>
           <.button
-            class="font-mono font-medium rounded-r-lg rounded-l-none !bg-brand-yellow border-2 border-black shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
+            class="font-sans font-medium rounded-r-lg rounded-l-none !bg-brand-yellow border-2 border-black shadow-brutalism h-10 flex items-center justify-center min-w-20 hover:bg-brand-yellow !text-black active:!text-black"
             phx-disable-with="Joining..."
           >
             Join
@@ -45,7 +38,7 @@
       </.simple_form>
 
       <button
-        class="font-mono font-medium rounded-full !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism"
+        class="font-sans font-semibold font-medium !bg-brand-yellow border-2 border-black h-12 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full max-w-sm text-lg transition-shadow duration-200 hover:shadow-brutalism rounded-md"
         phx-click="create_room"
         phx-disable-with="Creating room..."
         id="create_room"
