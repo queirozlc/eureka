@@ -19,7 +19,7 @@ defmodule Eureka.Players.Room do
   schema "rooms" do
     field :code, :string
     field :capacity, :integer, default: 2
-    field :score, :integer, default: 20
+    field :score, :integer, default: 50
     field :genres, {:array, :string}, default: []
     field :last_played_at, :utc_datetime
     belongs_to :user, User

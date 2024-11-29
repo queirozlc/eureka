@@ -16,7 +16,6 @@ defmodule Eureka.PlayersFixtures do
   """
   def room_fixture(attrs \\ %{}) do
     user = AccountsFixtures.user_fixture()
-    
 
     {:ok, room} =
       attrs

@@ -58,7 +58,7 @@ defmodule Eureka.PlayersTest do
       assert {:ok, %Room{} = room} = Players.create_room(valid_attrs)
       assert room.code =~ ~r/^[A-Z0-9]{4}$/
       assert room.capacity == 2
-      assert room.score == 0
+      assert room.score == 50
       assert room.genres == []
     end
 

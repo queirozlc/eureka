@@ -163,8 +163,6 @@ defmodule Eureka.Game do
     # Get list of players with their scores, sorted by score (highest first)
     players_by_score = Enum.sort_by(game.score, & &1.score, &>=/2)
 
-    dbg(players_by_score)
-
     winners =
       case players_by_score do
         [] ->
@@ -187,8 +185,8 @@ defmodule Eureka.Game do
 
             winners =
               [player1 | rest]
-              |> Stream.take_while(fn %Game.Score{score: score} -> score == highest_score end)
-              |> Stream.map(fn %Game.Score{player: player} -> player end)
+              |> Stream.take_while(&(&1.score == highest_score))
+              |> Stream.map(& &1.player)
               |> Enum.to_list()
 
             case winners do

@@ -129,7 +129,6 @@
           {Credo.Check.Refactor.MatchInCondition, []},
           {Credo.Check.Refactor.NegatedConditionsInUnless, []},
           {Credo.Check.Refactor.NegatedConditionsWithElse, []},
-          {Credo.Check.Refactor.Nesting, []},
           {Credo.Check.Refactor.RedundantWithClauseResult, []},
           {Credo.Check.Refactor.RejectReject, []},
           {Credo.Check.Refactor.UnlessWithElse, []},
@@ -165,6 +164,7 @@
           {Credo.Check.Readability.ModuleDoc, []},
           # Checks scheduled for next check update (opt-in for now)
           {Credo.Check.Refactor.UtcNowTruncate, []},
+          {Credo.Check.Refactor.Nesting, []},
 
           #
           # Controversial and experimental checks (opt-in, just move the check to `:enabled`

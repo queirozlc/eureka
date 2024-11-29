@@ -65,6 +65,9 @@ config :eureka, EurekaWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :eureka, dev_routes: true
 
+# Groq API
+config :eureka, groq_api_key: System.fetch_env!("GROQ_API_KEY")
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

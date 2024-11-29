@@ -2,7 +2,6 @@ defmodule Eureka.ExGroq do
   alias __MODULE__.Response
   @api_url "https://api.groq.com/openai/v1/chat/completions"
   @app :eureka
-  @api_key Application.compile_env!(:eureka, :groq_api_key)
 
   @doc """
   Sends a prompt to the Groq API to generate a response.
@@ -22,9 +21,11 @@ defmodule Eureka.ExGroq do
   """
   @spec ask!(prompt :: String.t()) :: Response.t()
   def ask!(prompt) do
+    api_key = Application.get_env(@app, :groq_api_key, "")
+
     headers = [
       {"Content-Type", "application/json"},
-      {"Authorization", "Bearer #{@api_key}"}
+      {"Authorization", "Bearer #{api_key}"}
     ]
 
     body =

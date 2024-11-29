@@ -110,13 +110,15 @@ defmodule EurekaWeb.GameLive.Show do
       {:ok, game_server_pid, game} ->
         room = Players.get_room_by_code(game.room_code)
 
+        handle_exit = fn _reason ->
+          GameServer.leave_game(game_server_pid, socket.assigns.current_user.id, self())
+        end
+
         if connected?(socket) do
           GameServer.subscribe_game(game_server_pid)
           Presence.track_players(room, socket.assigns.current_user.id)
 
-          ProcessMonitor.monitor(fn _reason ->
-            GameServer.leave_game(game_server_pid, socket.assigns.current_user.id, self())
-          end)
+          ProcessMonitor.monitor(&handle_exit.(&1))
         end
 
         scores =
@@ -167,7 +169,6 @@ defmodule EurekaWeb.GameLive.Show do
   end
 
   def handle_info({:game_over, winner}, socket) when is_nil(winner) do
-    dbg("reached here")
     current_user = socket.assigns.current_user
     owner? = GameServer.owner?(socket.assigns.game_server_pid, current_user.id)
 
@@ -202,7 +203,6 @@ defmodule EurekaWeb.GameLive.Show do
   end
 
   def handle_info(:game_ended, socket) do
-    dbg({socket.assigns.winner, socket.assigns.show_modal})
     {:noreply, push_event(socket, "game_ended", %{})}
   end
 

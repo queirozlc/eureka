@@ -77,12 +77,16 @@ defmodule EurekaWeb.PageLive.Home do
   end
 
   defp navigate_to_room(socket, room) do
-    current_user = socket.assigns.current_user
+    case socket.assigns.current_user do
+      nil ->
+        push_patch(socket, to: ~p"/users/guest/log_in")
 
-    if Players.owner?(room.code, current_user.id) do
-      push_navigate(socket, to: ~p"/rooms/#{room.code}/settings")
-    else
-      push_navigate(socket, to: ~p"/rooms/#{room.code}")
+      user ->
+        if Players.owner?(room.code, user.id) do
+          push_navigate(socket, to: ~p"/rooms/#{room.code}/settings")
+        else
+          push_navigate(socket, to: ~p"/rooms/#{room.code}")
+        end
     end
   end
 end

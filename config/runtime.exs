@@ -53,10 +53,7 @@ if config_env() == :prod do
 
   config :eureka, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
-  config :eureka,
-    spotify_client_id: System.fetch_env!("SPOTIFY_CLIENT_ID"),
-    spotify_client_secret: System.fetch_env!("SPOTIFY_CLIENT_TOKEN"),
-    groq_api: System.fetch_env!("GROQ_API_KEY")
+  config :eureka, groq_api_key: System.fetch_env!("GROQ_API_KEY")
 
   config :eureka, EurekaWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],

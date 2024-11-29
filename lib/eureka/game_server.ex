@@ -167,7 +167,6 @@ defmodule Eureka.GameServer do
     if current_timer <= 0 do
       if game.round == game.rounds do
         game = Game.result(game)
-        dbg(game.winner)
         broadcast_update!(game, {:game_over, game.winner})
         {:noreply, game}
       else

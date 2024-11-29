@@ -47,7 +47,7 @@ defmodule EurekaWeb.RoomLive.Show do
                     field={@form[:capacity]}
                     disabled={@live_action == :show}
                     type="select"
-                    options={[5, 10, 15, 20]}
+                    options={5..20//5}
                     value={@form[:capacity].value || 5}
                   />
                 </li>
@@ -243,7 +243,6 @@ defmodule EurekaWeb.RoomLive.Show do
     if presence.metas == [] do
       {:noreply, remove_presence(socket, user)}
     else
-      dbg(presence.metas)
       {:noreply, socket}
     end
   end
