@@ -3,11 +3,24 @@ defmodule Eureka.Players.Room do
   alias Eureka.Accounts.User
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{
+          id: non_neg_integer(),
+          code: String.t(),
+          capacity: non_neg_integer(),
+          score: non_neg_integer(),
+          genres: [String.t()],
+          last_played_at: DateTime.t(),
+          user_id: non_neg_integer(),
+          user: User.t(),
+          inserted_at: DateTime.t(),
+          updated_at: DateTime.t()
+        }
+
   schema "rooms" do
     field :code, :string
     field :capacity, :integer, default: 2
-    field :score, :integer, default: 0
-    field :genres, {:array, :string}
+    field :score, :integer, default: 20
+    field :genres, {:array, :string}, default: []
     field :last_played_at, :utc_datetime
     belongs_to :user, User
 
@@ -20,7 +33,7 @@ defmodule Eureka.Players.Room do
     |> cast(attrs, [:code, :user_id])
     |> validate_required([:code, :user_id])
     |> unique_constraint(:code)
-    |> validate_length(:code, min: 4, max: 4)
+    |> validate_length(:code, is: 4)
     |> validate_format(:code, ~r/^[A-Z0-9]{4}$/,
       message: "must be 4 uppercase alphanumeric characters"
     )

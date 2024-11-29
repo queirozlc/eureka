@@ -8,21 +8,9 @@ defmodule Eureka.SpotifyAuthenticator do
   alias Eureka.SpotifyAuthenticator.Credentials
 
   @auth_url "https://accounts.spotify.com/api/token"
-  @table :spotify_token
-
-  def start do
-    if :ets.whereis(@table) == :undefined do
-      :ets.new(@table, [
-        :named_table,
-        :set,
-        :public,
-        read_concurrency: true,
-        write_concurrency: true
-      ])
-    end
-
-    :already_started
-  end
+  @cache_ttl :timer.hours(1)
+  @app_cache :eureka_cache
+  @cache_key :spotify_token
 
   @doc """
   Fetches the access token from the cache or requests a new one from Spotify.
@@ -38,22 +26,18 @@ defmodule Eureka.SpotifyAuthenticator do
       {:ok, "access_token"}
   """
   @spec get_access_token() :: Task.t() | String.t()
-  def get_access_token() do
-    case :ets.lookup(@table, __MODULE__) do
-      [] ->
+  def get_access_token do
+    case Cachex.get(@app_cache, @cache_key) do
+      {:ok, nil} ->
         request_token()
 
-      [
-        {_key,
-         %Credentials{issued_at: issued_at, expires_in: expires_in, access_token: access_token}}
-      ] ->
+      {:ok,
+       %Credentials{issued_at: issued_at, expires_in: expires_in, access_token: access_token}} ->
         get_or_refresh_token(issued_at, expires_in, access_token)
     end
   end
 
-  def request_token do
-    start()
-
+  defp request_token do
     client_id = Application.get_env(:eureka, :spotify_client_id)
     client_secret = Application.get_env(:eureka, :spotify_client_secret)
 
@@ -75,16 +59,12 @@ defmodule Eureka.SpotifyAuthenticator do
 
     request = Req.new(options)
 
-    Task.async(fn ->
+    Task.Supervisor.async(Eureka.TaskSupervisor, fn ->
       %Req.Response{body: body} = Req.post!(request)
       credentials = Credentials.from_map(body)
-      :ets.insert(@table, {__MODULE__, credentials})
+      Cachex.put(@app_cache, @cache_key, credentials, expire: @cache_ttl)
       credentials.access_token
     end)
-  end
-
-  def table do
-    @table
   end
 
   defp get_or_refresh_token(issued_at, expires_in, token) do

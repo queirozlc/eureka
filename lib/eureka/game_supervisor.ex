@@ -13,10 +13,11 @@ defmodule Eureka.GameSupervisor do
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
 
-  def start_game(room_code, players) do
+  def start_game(room_code, players, songs) do
     case DynamicSupervisor.start_child(__MODULE__, %{
            id: :ignore,
-           start: {GameServer, :start_link, [[room_code: room_code, players: players]]}
+           start:
+             {GameServer, :start_link, [[room_code: room_code, players: players, songs: songs]]}
          }) do
       :ignore ->
         {:error, "GameServer ignored start request"}

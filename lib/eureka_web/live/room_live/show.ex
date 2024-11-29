@@ -1,5 +1,5 @@
 defmodule EurekaWeb.RoomLive.Show do
-  alias Eureka.Players
+  alias Eureka.{GameServer, Players, Song}
   alias EurekaWeb.Presence
   use EurekaWeb, :live_view
 
@@ -22,10 +22,12 @@ defmodule EurekaWeb.RoomLive.Show do
     </div>
 
     <div class="w-full bg-white border-2 px-8 border-black shadow-brutalism mt-10 py-10 flex flex-col gap-8">
-      <h1 class="text-2xl md:text-3xl font-bold font-mono text-contrast-yellow text-center font-outline-05 select-none drop-shadow-text md:font-outline-05">
+      <h1
+        :if={@live_action == :edit}
+        class="text-2xl md:text-3xl font-bold font-mono text-contrast-yellow text-center font-outline-05 select-none drop-shadow-text md:font-outline-05"
+      >
         Let's setup your room
       </h1>
-
       <div>
         <.simple_form for={@form} phx-submit="start_game" phx-change="validate" id="room-settings">
           <div class="grid grid-cols-3 divide-x-4 divide-black min-h-60">
@@ -43,6 +45,7 @@ defmodule EurekaWeb.RoomLive.Show do
 
                   <.input
                     field={@form[:capacity]}
+                    disabled={@live_action == :show}
                     type="select"
                     options={[5, 10, 15, 20]}
                     value={@form[:capacity].value || 5}
@@ -58,7 +61,8 @@ defmodule EurekaWeb.RoomLive.Show do
                   <.input
                     type="select"
                     field={@form[:score]}
-                    options={50..120//10}
+                    disabled={@live_action == :show}
+                    options={10..120//10}
                     value={@form[:score].value || 10}
                   />
                 </li>
@@ -68,6 +72,71 @@ defmodule EurekaWeb.RoomLive.Show do
               <h2 class="font-semibold font-mono text-xl text-center">
                 Genres
               </h2>
+
+              <.async_result :let={genres} assign={@genres}>
+                <:loading>
+                  <div class="flex items-center justify-center h-full">
+                    <.spinner />
+                  </div>
+                </:loading>
+
+                <:failed>
+                  <div class="h-full items-center flex flex-col pt-5 space-y-4">
+                    <div class="w-full flex flex-col items-center">
+                      <svg
+                        class="size-12 text-red-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        >
+                        </path>
+                      </svg>
+
+                      <div class="text-gray-700 text-base font-medium font-mono">
+                        Oops! Something went wrong
+                      </div>
+                    </div>
+
+                    <div class="w-full px-20">
+                      <button
+                        class="font-mono font-medium rounded-sm !bg-brand-yellow border-2 border-black h-10 flex items-center justify-center hover:bg-brand-yellow !text-black active:!text-black w-full transition-shadow duration-200 hover:shadow-brutalism"
+                        phx-click={JS.push("retry_genres") |> JS.add_class("phx-loading")}
+                      >
+                        <svg
+                          class="mr-2 -ml-1 size-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                          />
+                        </svg>
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                </:failed>
+
+                <div class="grid grid-cols-2 gap-2 pt-4 px-3">
+                  <%= for genre <- genres do %>
+                    <div class="font-mono font-medium rounded-sm bg-brand-yellow border-2 border-black h-10 flex items-center justify-center hover:shadow-brutalism-sm text-black w-full text-sm transition-shadow duration-200 cursor-default px-3 py-2">
+                      <%= genre %>
+                    </div>
+                  <% end %>
+                </div>
+              </.async_result>
             </div>
             <div class="pt-1 space-y-3">
               <h2 class="font-semibold font-mono text-xl text-center">
@@ -99,6 +168,7 @@ defmodule EurekaWeb.RoomLive.Show do
         </.simple_form>
       </div>
       <.button
+        :if={@room.user_id == @current_user.id}
         type="submit"
         class="self-center rounded-none w-[10%] !bg-brand border-black border-2 hover:shadow-brutalism-sm"
         form="room-settings"
@@ -124,6 +194,7 @@ defmodule EurekaWeb.RoomLive.Show do
       socket
       |> assign(room: room)
       |> assign_presences()
+      |> assign_async(:genres, fn -> get_genres(room) end, supervisor: Eureka.TaskSupervisor)
       |> assign_new(:form, fn ->
         to_form(Players.change_room_settings(room))
       end)
@@ -142,11 +213,18 @@ defmodule EurekaWeb.RoomLive.Show do
     {:noreply, assign(socket, form: to_form(changeset, action: :validate))}
   end
 
-  def handle_event("start_game", _params, %{assigns: %{room: room}} = socket) do
+  def handle_event(
+        "start_game",
+        _params,
+        %{assigns: %{room: room, current_user: current_user}} = socket
+      ) do
     players_id = Presence.get_online_users_id(room)
 
-    case Eureka.GameSupervisor.start_game(room.code, players_id) do
-      {:ok, _} ->
+    songs = Song.get_game_songs(room)
+
+    case Eureka.GameSupervisor.start_game(room.code, players_id, songs) do
+      {:ok, game_pid} ->
+        GameServer.set_owner(game_pid, current_user.id)
         {:noreply, socket}
 
       {:error, reason} ->
@@ -165,6 +243,7 @@ defmodule EurekaWeb.RoomLive.Show do
     if presence.metas == [] do
       {:noreply, remove_presence(socket, user)}
     else
+      dbg(presence.metas)
       {:noreply, socket}
     end
   end
@@ -197,6 +276,14 @@ defmodule EurekaWeb.RoomLive.Show do
 
   defp sorted_presences(presences, admin_id) do
     Enum.sort_by(presences, fn {_, user} -> {user.id == admin_id, user.id} end)
+  end
+
+  defp get_genres(room) do
+    genres = Song.get_genres_suggestion!(room.code)
+
+    if genres != room.genres, do: Players.update_room(room, %{genres: genres})
+
+    {:ok, %{genres: genres}}
   end
 
   defp add_to_clipboard do

@@ -9,15 +9,16 @@ defmodule Eureka.Game do
 
   @type t :: %{
           id: String.t(),
-          owner: pid(),
+          owner: non_neg_integer() | nil,
           room_code: String.t(),
           song_queue: [Song.t()],
-          current_song: Song.Response.t(),
+          current_song: Song.Response.t() | nil,
           score: [Game.Score.t()],
-          round: integer(),
+          round: non_neg_integer(),
+          rounds: non_neg_integer(),
           winner: integer(),
-          valid_answers: [String.t()],
           players: [integer()],
+          guess_options: [String.t()],
           song_timer: non_neg_integer(),
           timer_ref: reference()
         }
@@ -30,9 +31,10 @@ defmodule Eureka.Game do
     :current_song,
     :score,
     :round,
+    :rounds,
     :winner,
-    :valid_answers,
     :players,
+    :guess_options,
     :song_timer,
     :timer_ref
   ]
@@ -44,44 +46,35 @@ defmodule Eureka.Game do
     :current_song,
     :score,
     :round,
+    :rounds,
     :winner,
-    :valid_answers,
     :players,
+    :guess_options,
     :song_timer,
     :timer_ref
   ]
 
-  @spec new_game(integer(), [integer()]) :: Game.t()
-  def new_game(room_code, players) do
-    queue = [
-      # This will be mocked for now but will come through AI in the future
-      %Song{
-        artist: "Adele",
-        track: "Easy On Me"
-      }
-      # %Song{
-      #   artist: "Orochi",
-      #   track: "Mesma História"
-      # },
-      # %Song{
-      #   artist: "Matuê",
-      #   track: "4TAL"
-      # }
-    ]
-
+  @spec new_game(
+          room_code :: non_neg_integer(),
+          players :: [non_neg_integer()],
+          songs :: [Song.t()],
+          rounds :: non_neg_integer()
+        ) :: t()
+  def new_game(room_code, players, songs, rounds) do
     score = Enum.map(players, &%Game.Score{score: 0, player: &1})
 
     %Eureka.Game{
       id: generate_game_id(),
       owner: nil,
       room_code: room_code,
-      song_queue: queue,
+      song_queue: songs,
       current_song: nil,
       score: score,
       round: 0,
+      rounds: rounds,
       winner: nil,
-      valid_answers: [],
       players: players,
+      guess_options: [],
       song_timer: 0,
       timer_ref: nil
     }
@@ -90,15 +83,16 @@ defmodule Eureka.Game do
   @doc """
   Returns the next song in the queue
   """
-  @spec next_song(game :: Game.t()) :: Song.t() | nil
+  @spec next_song(game :: t()) :: Song.t() | nil
   def next_song(%__MODULE__{song_queue: song_queue}) do
+    [_ | song_queue] = song_queue
     if Enum.empty?(song_queue), do: nil, else: Enum.at(song_queue, 0)
   end
 
   @doc """
   Updates the song queue removing the first element and setting the current fetched song
   """
-  @spec update_song(game :: Game.t(), song :: Song.Response.t()) :: Game.t()
+  @spec update_song(game :: t(), song :: Song.Response.t()) :: t()
   def update_song(%__MODULE__{} = game, %Song.Response{} = current_song) do
     [_ | song_queue] = game.song_queue
 
@@ -108,15 +102,37 @@ defmodule Eureka.Game do
         current_song: current_song,
         song_timer: Song.duration(current_song),
         round: game.round + 1,
-        valid_answers:
-          get_valid_answers(%Song{track: current_song.name, artist: current_song.artist})
+        guess_options:
+          guess_options(%Song{track: current_song.name, artist: current_song.artist}, game)
     }
+  end
+
+  @doc """
+  Updates the song queue removing the first element, useful when the song is not found and need to skip it
+
+  ## Parameters
+
+    * game - A %Game{} struct representing the current game state
+
+  ## Returns
+
+    * %Game{} - The updated game state with the song queue updated
+
+  ## Examples
+
+      iex> game = %Game{song_queue: [%Song{}, %Song{}]}
+      iex> update_song_queue(game)
+      %Game{song_queue: [%Song{}]}
+  """
+  @spec dequeue_song(game :: t()) :: t()
+  def dequeue_song(%__MODULE__{} = game) do
+    %Game{game | song_queue: Enum.drop(game.song_queue, 0)}
   end
 
   @doc """
   Returns the score of a player
   """
-  @spec get_score(Game.t(), player_id :: non_neg_integer()) :: Game.Score.t()
+  @spec get_score(t(), player_id :: non_neg_integer()) :: Game.Score.t()
   def get_score(%Game{score: score}, player_id) do
     Enum.find(score, fn %Game.Score{player: player} -> player == player_id end)
   end
@@ -124,7 +140,7 @@ defmodule Eureka.Game do
   @doc """
   Decreases the song timer by 1 second
   """
-  @spec countdown_timer(Game.t()) :: Game.t()
+  @spec countdown_timer(t()) :: t()
   def countdown_timer(%__MODULE__{} = game) do
     %Game{game | song_timer: game.song_timer - :timer.seconds(1)}
   end
@@ -132,10 +148,57 @@ defmodule Eureka.Game do
   @doc """
   Checks if the user input is a valid answer
   """
-  @spec valid_guess?(Game.t(), String.t()) :: boolean()
-  def valid_guess?(%Game{valid_answers: valid_answers}, guess) do
+  @spec valid_guess?(t(), String.t()) :: boolean()
+  def valid_guess?(%Game{} = game, guess) do
     guess = guess |> String.normalize(:nfd) |> String.trim() |> String.downcase()
-    Enum.any?(valid_answers, &(String.jaro_distance(&1, guess) > @guess_threshold))
+    %Song.Response{name: name, artist: artist} = game.current_song
+
+    answer =
+      "#{artist} - #{name}" |> String.normalize(:nfd) |> String.trim() |> String.downcase()
+
+    String.jaro_distance(guess, answer) > @guess_threshold
+  end
+
+  def result(%Game{} = game) do
+    # Get list of players with their scores, sorted by score (highest first)
+    players_by_score = Enum.sort_by(game.score, & &1.score, &>=/2)
+
+    dbg(players_by_score)
+
+    winners =
+      case players_by_score do
+        [] ->
+          nil
+
+        [%Game.Score{player: player, score: score}] ->
+          if score == 0 do
+            nil
+          else
+            player
+          end
+
+        [player1 | rest] ->
+          # if is an array of %Score{score: 0} then it's a draw
+          if player1.score == 0 && Enum.all?(rest, &(&1.score == 0)) do
+            nil
+          else
+            # Check for draws by comparing scores with the highest score
+            highest_score = player1.score
+
+            winners =
+              [player1 | rest]
+              |> Stream.take_while(fn %Game.Score{score: score} -> score == highest_score end)
+              |> Stream.map(fn %Game.Score{player: player} -> player end)
+              |> Enum.to_list()
+
+            case winners do
+              [single_winner] -> single_winner
+              multiple_winners -> multiple_winners
+            end
+          end
+      end
+
+    %Game{game | winner: winners}
   end
 
   @doc """
@@ -168,7 +231,7 @@ defmodule Eureka.Game do
       iex> guess_song(game, guess_info)
       {false, %Game{current_song: "Hey Jude", scores: %{}}}
   """
-  @spec guess_song(Game.t(), Map.t()) :: {boolean(), Game.t()}
+  @spec guess_song(t(), %{:guess => String.t(), :player => non_neg_integer()}) :: {boolean(), t()}
   def guess_song(%Game{} = game, %{guess: guess, player: player}) do
     if valid_guess?(game, guess) do
       {true, update_score(game, player)}
@@ -195,32 +258,21 @@ defmodule Eureka.Game do
     %Game{game | score: score}
   end
 
-  defp generate_game_id do
-    Ecto.UUID.generate()
+  defp guess_options(%Song{} = song, game) do
+    [random_song] = Enum.take_random(game.song_queue, 1)
+
+    valid = "#{song.artist} - #{song.track}"
+    # ensures that the random song is different from the valid one
+    invalid_random = "#{random_song.artist} - #{random_song.track}"
+
+    if String.jaro_distance(song.track, random_song.track) > 0.85 do
+      guess_options(song, game)
+    else
+      Enum.shuffle([valid, invalid_random])
+    end
   end
 
-  # This function will return the valid answers for the current song
-  # The main idea is to handle the possible cases of the user input
-  # Take the song "Easy on Me" by Adele as an example
-  # The valid answers will be
-  # ["Easy on Me", "easy on me", "Adele - Easy on Me", "adele - easy on me", "EASY ON ME", "ADELE - EASY ON ME", "easy on me - adele", "EASY ON ME - ADELE"]
-  defp get_valid_answers(%Song{track: track, artist: artist}) do
-    artist = String.normalize(artist, :nfd)
-
-    [
-      track,
-      String.downcase(track),
-      String.capitalize(track),
-      String.upcase(track),
-      "#{artist} - #{track}",
-      "#{String.downcase(artist)} - #{String.downcase(track)}",
-      "#{String.capitalize(artist)} - #{String.capitalize(track)}",
-      "#{String.upcase(artist)} - #{String.upcase(track)}",
-      "#{track} - #{artist}",
-      "#{String.downcase(track)} - #{String.downcase(artist)}",
-      "#{String.capitalize(track)} - #{String.capitalize(artist)}",
-      "#{String.upcase(track)} - #{String.upcase(artist)}"
-    ]
-    |> Enum.map(&String.trim/1)
+  defp generate_game_id do
+    Ecto.UUID.generate()
   end
 end

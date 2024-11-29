@@ -59,8 +59,6 @@ defmodule Eureka.SpotifyAuthenticatorTest do
         Req.Test.json(conn, @valid_response)
       end)
 
-      SpotifyAuthenticator.start()
-
       SpotifyAuthenticator.get_access_token()
 
       assert_receive {:token, "token"}

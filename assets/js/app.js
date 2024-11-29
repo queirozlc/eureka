@@ -22,12 +22,34 @@ import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
 import topbar from "../vendor/topbar";
 
+let Hooks = {}
+
+Hooks.AudioPlayer = {
+  mounted() {
+    this.el.volume = 0.10
+
+    this.handleEvent("game_ended", (_) => {
+      this.el.pause()
+    })
+  }
+}
+
+Hooks.GuessButton = {
+  mounted() {
+    this.el.addEventListener("click", () => {
+      this.pushEvent("guess_song", { guess: this.el.textContent.trim() })
+    })
+  }
+}
+
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
+
 let liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: { _csrf_token: csrfToken },
+  hooks: Hooks
 });
 
 // Show progress bar on live navigation and form submits

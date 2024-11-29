@@ -70,11 +70,19 @@ defmodule EurekaWeb.PageLive.Home do
 
   defp check_room_capacity(socket, room, num_players) do
     if Players.can_join_room?(room, num_players) do
-      socket
-      |> push_navigate(to: ~p"/rooms/#{room.code}")
+      navigate_to_room(socket, room)
     else
-      socket
-      |> put_flash(:error, "Room is full of capacity")
+      put_flash(socket, :error, "Room is full of capacity")
+    end
+  end
+
+  defp navigate_to_room(socket, room) do
+    current_user = socket.assigns.current_user
+
+    if Players.owner?(room.code, current_user.id) do
+      push_navigate(socket, to: ~p"/rooms/#{room.code}/settings")
+    else
+      push_navigate(socket, to: ~p"/rooms/#{room.code}")
     end
   end
 end

@@ -53,6 +53,15 @@ defmodule Eureka.Players do
     |> Repo.one()
   end
 
+  @doc """
+  Returns true if the user is the owner of the room.
+
+  ## Examples
+
+      iex> owner?(room_code, user_id)
+      true
+  """
+  @spec owner?(room_code :: String.t(), user_id :: non_neg_integer()) :: boolean()
   def owner?(room_code, user_id) do
     case get_room_by_code(room_code) do
       nil -> false

@@ -136,6 +136,40 @@ defmodule EurekaWeb.CoreComponents do
   end
 
   @doc """
+  Renders a loading icon with spin animation, useful for indicating
+  something is in progress.
+
+  ## Examples
+
+      <.async_result>
+        <:loading>
+          <.spinner />
+        </:loading>
+      </.async_result>
+  """
+
+  attr :class, :string, required: false, default: ""
+
+  def spinner(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class={["lucide lucide-loader animate-spin", @class]}
+    >
+      <path d="M12 2v4" /><path d="m16.2 7.8 2.9-2.9" /><path d="M18 12h4" /><path d="m16.2 16.2 2.9 2.9" /><path d="M12 18v4" /><path d="m4.9 19.1 2.9-2.9" /><path d="M2 12h4" /><path d="m4.9 4.9 2.9 2.9" />
+    </svg>
+    """
+  end
+
+  @doc """
   Shows the flash group with standard titles and content.
 
   ## Examples
@@ -281,8 +315,8 @@ defmodule EurekaWeb.CoreComponents do
 
   attr :type, :string,
     default: "text",
-    values: ~w(checkbox color date datetime-local email file month number password
-               range search select tel text textarea time url week)
+    values:
+      ~w(checkbox color date datetime-local email file month number password range search select tel text textarea time url week)
 
   attr :field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:email]"

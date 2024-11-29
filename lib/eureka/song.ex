@@ -1,6 +1,7 @@
 defmodule Eureka.Song do
-  alias Eureka.SpotifyAuthenticator
-  alias __MODULE__.Response
+  require Logger
+  alias Eureka.{ExGroq, Players.Room}
+  alias __MODULE__
 
   defstruct [:artist, :track]
 
@@ -11,75 +12,151 @@ defmodule Eureka.Song do
 
   @task_supervisor Eureka.TaskSupervisor
 
-  @spotify_url "https://api.spotify.com/v1/search/"
+  @api_url "https://itunes.apple.com/search"
 
-  def search(%__MODULE__{artist: artist, track: track}) do
-    access_token = get_access_token()
+  @genres_prompt ~s(Generates 10 random popular song genres. Be sure to answer in a json format with the following structure: "{genres: []}". IMPORTANT: try to return popular genres in Brazil and USA and avoid genres like classical and jazz.)
 
-    headers = [
-      {"Content-Type", "application/json"},
-      {"Authorization", "Bearer #{access_token}"}
-    ]
+  @cache_ttl :timer.minutes(5)
 
-    query = "track:#{track} artist:#{artist}"
+  @cache_key :eureka_cache
+
+  @doc """
+  Gets the duration of a song. If the song has no preview URL, the duration is 0.
+
+  ## Parameters
+    * `song` - A song response struct. `%Song.Response{preview_url: "https://example.com"}`
+
+  ## Examples
+    iex> Song.duration(%Song.Response{preview_url: "https://example.com"})
+    30
+  """
+  @spec duration(Song.Response.t()) :: non_neg_integer()
+  defdelegate duration(song), to: Song.Response
+
+  @doc """
+  Searches for a song on Spotify's API.
+
+  ## Parameters
+    * `song` - A song struct with the artist and track name.
+
+  ## Examples
+
+      iex> Song.search(%Song{artist: "Adele", track: "Easy On Me"})
+      %Task{...}
+
+  """
+  @spec search(Song.t()) :: Task.t()
+  def search(%Song{artist: artist, track: track}) do
+    query = "#{track} #{artist}"
 
     options =
       [
-        url: @spotify_url,
-        headers: headers,
+        url: @api_url,
         method: :get,
-        params: [q: query, type: "track", limit: 1, market: "BR"]
+        params: [
+          term: query,
+          media: "music",
+          entity: "song",
+          limit: 1
+        ]
       ]
       |> Keyword.merge(Application.get_env(:eureka, :eureka_req_options, []))
 
     request = Req.new(options)
 
-    Task.Supervisor.async_nolink(
-      @task_supervisor,
-      fn ->
-        Req.get!(request).body
-        |> parse_song
-      end
-    )
+    Task.Supervisor.async_nolink(@task_supervisor, fn ->
+      Req.get!(request).body
+      |> Jason.decode()
+      |> parse_song
+    end)
   end
 
-  @spec duration(Song.Response.t()) :: integer()
-  def duration(song) do
-    case song.preview_url do
-      nil -> 0
-      _ -> :timer.seconds(30)
+  @doc """
+  Retrieves a list of suggested genres using Groq AI API.
+
+  Returns a list of genres based on a predefined prompt.
+
+  > Note: The function is marked with ! as it may raise an error if the API call fails.
+
+  ## Examples
+
+      iex> get_genres_suggestion!("AB20")
+      ["rock", "indie", "alternative"]
+  """
+  @spec get_genres_suggestion!(room_code :: String.t()) :: list()
+  def get_genres_suggestion!(room_code) do
+    case Cachex.get(@cache_key, room_code) do
+      {:ok, nil} ->
+        %ExGroq.Response{content: content} = ExGroq.ask!(@genres_prompt)
+        genres = Map.get(content, "genres")
+        Cachex.put(@cache_key, room_code, genres, expire: @cache_ttl)
+        genres
+
+      {:ok, genres} ->
+        genres
     end
   end
 
-  defp parse_song(%{"tracks" => tracks}) do
-    items =
-      Map.get(tracks, "items")
-      |> Enum.at(0)
+  @spec get_game_songs(room :: Room.t()) :: [Song.t()]
+  def get_game_songs(%Room{genres: genres, score: score}) do
+    genres_str = Enum.join(genres, ", ")
+    rounds = div(score, 10)
 
-    name = Map.get(items, "name")
-    artist = Map.get(items, "artists") |> Enum.at(0) |> Map.get("name")
-    cover = Map.get(items, "album") |> Map.get("images") |> Enum.at(0) |> Map.get("url")
-    preview_url = Map.get(items, "preview_url")
+    songs_prompt =
+      ~s(Generate #{rounds * 3} songs with the following json format: "{"songs": [{"artist": "artist_name", "track": "track_name"}]} based on the following genres: #{genres_str}. The songs must be popular and most random as possible. is important to have a good mix of genres and songs.)
 
-    Response.new(name, artist, cover, preview_url)
+    %ExGroq.Response{content: content} = ExGroq.ask!(songs_prompt)
+
+    Map.get(content, "songs")
+    |> Enum.map(&from_map(&1))
   end
 
-  defp get_access_token do
-    SpotifyAuthenticator.start()
+  # in this case, no song was found
+  defp parse_song({:ok, %{"results" => []}}) do
+    Logger.info("No song was found.")
+    %{}
+  end
 
-    case SpotifyAuthenticator.get_access_token() do
-      %Task{} = task ->
-        Task.await(task)
+  defp parse_song({:ok, %{"results" => results}}) do
+    [track] = results
 
-      token ->
-        token
-    end
+    name = Map.get(track, "trackName") |> sanitize_name()
+    artist = Map.get(track, "artistName")
+    cover = Map.get(track, "artworkUrl100")
+    preview_url = Map.get(track, "previewUrl")
+
+    Song.Response.new(name, artist, cover, preview_url)
+  end
+
+  defp parse_song({:error, decode_error}) do
+    Logger.error("Error decoding the response: #{inspect(decode_error)}")
+    %{}
+  end
+
+  defp from_map(%{"artist" => artist, "track" => track}) do
+    %Song{artist: artist, track: track}
+  end
+
+  defp from_map(_), do: []
+
+  # remove special characters from the song name such as " - " and " (feat. )"
+  defp sanitize_name(name) do
+    name
+    |> String.replace(~r/ - /, " ")
+    |> String.replace(~r/ \(feat. .*\)/, "")
+    |> String.replace(~r/ \(.*\)/, "")
+    |> String.replace(~r/ \[.*\]/, "")
+    |> String.replace(~r/ \{.*\}/, "")
+    |> String.trim()
+    |> String.split(",")
+    |> List.first()
   end
 end
 
 defmodule Eureka.Song.Response do
   @enforce_keys [:name, :artist, :cover, :preview_url]
   defstruct [:name, :artist, :cover, :preview_url]
+  alias __MODULE__
 
   @type t :: %__MODULE__{
           name: String.t(),
@@ -95,5 +172,12 @@ defmodule Eureka.Song.Response do
       cover: cover,
       preview_url: preview_url
     }
+  end
+
+  def duration(%Response{preview_url: preview_url}) do
+    case preview_url do
+      nil -> 0
+      _ -> :timer.seconds(30)
+    end
   end
 end

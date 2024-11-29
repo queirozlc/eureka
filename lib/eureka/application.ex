@@ -12,6 +12,8 @@ defmodule Eureka.Application do
       Eureka.Repo,
       {DNSCluster, query: Application.get_env(:eureka, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Eureka.PubSub},
+      {Cachex, [:eureka_cache]},
+      ProcessMonitor,
       {Task.Supervisor, name: Eureka.TaskSupervisor},
       EurekaWeb.Presence,
       # Supervisor to start games
